@@ -7,12 +7,12 @@
 
 import axios, { AxiosInstance, AxiosError } from "axios";
 
-export interface BillComConfig {
+export interface BillConfig {
   apiToken: string;
   environment: "sandbox" | "production";
 }
 
-export interface BillComApiError {
+export interface BillApiError {
   error: string;
   message: string;
   status: number;
@@ -21,12 +21,12 @@ export interface BillComApiError {
 /**
  * Bill.com API Client
  */
-export class BillComClient {
+export class BillClient {
   private client: AxiosInstance;
   private readonly baseUrl: string;
   private readonly apiToken: string;
 
-  constructor(config: BillComConfig) {
+  constructor(config: BillConfig) {
     this.apiToken = config.apiToken;
 
     // Set base URL based on environment
@@ -58,7 +58,7 @@ export class BillComClient {
   /**
    * Handle API errors and convert to a standard format
    */
-  private handleError(error: AxiosError): BillComApiError {
+  private handleError(error: AxiosError): BillApiError {
     if (error.response) {
       // The request was made and the server responded with a status code
       // that falls out of the range of 2xx

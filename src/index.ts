@@ -13,13 +13,13 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
-import { BillComClient } from "./billcom-client.js";
+import { BillClient } from "./bill-client.js";
 import { tools } from "./tools/index.js";
 
 /**
  * Get Bill.com API configuration from environment variables
  */
-function getBillComConfig() {
+function getBillConfig() {
   const apiToken = process.env.BILL_API_TOKEN || process.env.BILL_COM_API_TOKEN;
   const environment = process.env.BILL_ENVIRONMENT || "sandbox";
 
@@ -42,11 +42,11 @@ async function main() {
   console.error("[Bill.com MCP Server] Starting...");
 
   // Get configuration
-  const config = getBillComConfig();
+  const config = getBillConfig();
   console.error(`[Bill.com MCP Server] Environment: ${config.environment}`);
 
   // Initialize Bill.com API client
-  const billComClient = new BillComClient(config);
+  const billClient = new BillClient(config);
 
   // Create MCP server
   const server = new Server(
@@ -84,7 +84,7 @@ async function main() {
     }
 
     try {
-      const result = await tool.handler(args, billComClient);
+      const result = await tool.handler(args, billClient);
       return {
         content: [
           {

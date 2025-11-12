@@ -3,7 +3,7 @@
  */
 
 import { Tool } from "./index.js";
-import { BillComClient } from "../billcom-client.js";
+import { BillClient } from "../bill-client.js";
 
 /**
  * List bills
@@ -44,7 +44,7 @@ export const listBills: Tool = {
     },
     required: [],
   },
-  handler: async (args: any, client: BillComClient) => {
+  handler: async (args: any, client: BillClient) => {
     const {
       page = 1,
       page_size = 50,

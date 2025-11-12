@@ -4,7 +4,7 @@
  * Central registry of all available Bill.com MCP tools
  */
 
-import { BillComClient } from "../billcom-client.js";
+import { BillClient } from "../bill-client.js";
 import { listVendors } from "./vendors.js";
 import { listBills } from "./bills.js";
 import { getAccountInfo } from "./account.js";
@@ -17,7 +17,7 @@ export interface Tool {
     properties: Record<string, any>;
     required?: string[];
   };
-  handler: (args: any, client: BillComClient) => Promise<any>;
+  handler: (args: any, client: BillClient) => Promise<any>;
 }
 
 /**

@@ -3,7 +3,7 @@
  */
 
 import { Tool } from "./index.js";
-import { BillComClient } from "../billcom-client.js";
+import { BillClient } from "../bill-client.js";
 
 /**
  * Get account information
@@ -17,7 +17,7 @@ export const getAccountInfo: Tool = {
     properties: {},
     required: [],
   },
-  handler: async (args: any, client: BillComClient) => {
+  handler: async (args: any, client: BillClient) => {
     // Note: This endpoint may need to be adjusted based on Bill.com's actual API
     // The exact endpoint for account info should be verified in their documentation
     try {
