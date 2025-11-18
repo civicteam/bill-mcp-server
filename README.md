@@ -2,18 +2,24 @@
 
 A Model Context Protocol (MCP) server for integrating Bill.com accounting and payment services with AI assistants like Claude.
 
+## API Access Type
+
+This server uses the **Bill.com AP/AR API** with session-based authentication using AP/AR Sync Tokens.
+
+**Documentation**: [AP/AR Token-Based Sign In](https://developer.bill.com/docs/token-based-sign-in)
+
 ## Features
 
 - **Vendor Management**: List and search vendors
 - **Bill Operations**: View and manage bills (accounts payable)
-- **Account Info**: Access organization and user details
-- **API Token Authentication**: Secure authentication using Bill.com API tokens
+- **Organization Info**: Access organization details
+- **Session Management**: Automatic login and session refresh (48-hour sessions)
 
 ## Prerequisites
 
 - Node.js 18 or higher
-- Bill.com account with API access
-- Bill.com API token from [developer.bill.com](https://developer.bill.com)
+- Bill.com developer account with API access
+- Bill.com AP/AR Sync Token and Developer Key from [app-sandbox.bill.com](https://app-sandbox.bill.com)
 
 ## Installation
 
@@ -27,29 +33,61 @@ npm install
 # Copy environment variables
 cp .env.example .env
 
-# Add your Bill.com API token to .env
+# Add your Bill.com credentials to .env
 ```
 
 ## Configuration
 
-Create a `.env` file with your Bill.com API credentials:
+Create a `.env` file with your Bill.com AP/AR API credentials:
 
 ```env
-# Required: Your Bill.com API token
-BILL_API_TOKEN=your_api_token_here
+# Required: Developer Key from Settings → Sync & Integrations → Manage Developer Keys
+BILL_DEV_KEY=your_developer_key_here
+
+# Required: AP/AR Sync Token name (the name you gave the token)
+BILL_USERNAME=your_sync_token_name
+
+# Required: AP/AR Sync Token value (the generated token)
+BILL_PASSWORD=01ATROWTVVIYVZRO1774
+
+# Required: Organization ID (starts with 008)
+BILL_ORGANIZATION_ID=008xxxxx
 
 # Optional: Environment (default: sandbox)
 BILL_ENVIRONMENT=sandbox
 ```
 
-### Getting a Bill.com API Token
+### Getting Bill.com AP/AR API Credentials
 
-1. Visit [developer.bill.com](https://developer.bill.com)
-2. Sign up for a developer account
-3. Create an application
-4. Generate an API token for either:
-   - **Sandbox** (for testing): Use `sandbox` environment
-   - **Production** (for live data): Use `production` environment
+#### Step 1: Get Developer Key
+1. Sign in to the [Bill.com Sandbox](https://app-sandbox.bill.com/Login) with your developer account
+2. Navigate to **Settings** → **Sync & Integrations** → **Manage Developer Keys**
+3. Click **Add Developer Key** to generate a new key (you can have up to 4)
+4. Copy the generated **Developer Key** (e.g., `01ATROWTVVIYVZRO1774`)
+   - Use this as `BILL_DEV_KEY` in your configuration
+
+#### Step 2: Create AP/AR Sync Token
+1. From the same **Sync & Integrations** page, go to the **Tokens** section
+2. Click **Create AP/AR Sync Token**
+3. Enter a descriptive name for your token (e.g., `mcp-server-token`)
+   - Use this name as `BILL_USERNAME` in your configuration
+4. Click **Create** and copy the generated token value
+   - Use this value as `BILL_PASSWORD` in your configuration
+   - **Important**: Save this token immediately as it won't be shown again
+
+#### Step 3: Find Organization ID
+Your Organization ID is displayed on the **Sync & Integrations** page and starts with `008` (e.g., `00802UMJLLDINGYXdzke`)
+- Use this as `BILL_ORGANIZATION_ID` in your configuration
+
+#### Summary of Credentials Mapping
+| Bill.com Portal | Environment Variable | Example |
+|----------------|---------------------|---------|
+| Developer Key | `BILL_DEV_KEY` | `01ATROWTVVIYVZRO1774` |
+| Sync Token Name | `BILL_USERNAME` | `mcp-server-token` |
+| Sync Token Value | `BILL_PASSWORD` | `02UMJ-LLDIN-GYXdz-...` |
+| Organization ID | `BILL_ORGANIZATION_ID` | `00802UMJLLDINGYXdzke` |
+
+**Reference**: [Bill.com AP/AR Token-Based Sign In Documentation](https://developer.bill.com/docs/token-based-sign-in)
 
 ## Usage
 
@@ -82,38 +120,40 @@ docker run -e BILL_API_TOKEN=your_token_here bill-mcp-server
 
 ## Available Tools
 
-### `get_account_info`
-
-Get information about the current Bill.com account.
-
-**Parameters**: None
-
-**Example**:
-```json
-{
-  "name": "get_account_info",
-  "arguments": {}
-}
-```
-
 ### `list_vendors`
 
 List all vendors in the account with optional filtering.
 
 **Parameters**:
-- `page` (number, optional): Page number (default: 1)
-- `page_size` (number, optional): Results per page (default: 50, max: 100)
+- `limit` (number, optional): Maximum number of vendors to return (default: 50, max: 100)
+- `offset` (number, optional): Number of vendors to skip for pagination (default: 0)
 - `name` (string, optional): Filter by vendor name
-- `active` (boolean, optional): Filter by active status
+- `isActive` (boolean, optional): Filter by active status
 
 **Example**:
 ```json
 {
   "name": "list_vendors",
   "arguments": {
-    "page": 1,
-    "page_size": 20,
-    "active": true
+    "limit": 20,
+    "isActive": true
+  }
+}
+```
+
+### `get_vendor`
+
+Get detailed information about a specific vendor by ID.
+
+**Parameters**:
+- `id` (string, required): The vendor ID
+
+**Example**:
+```json
+{
+  "name": "get_vendor",
+  "arguments": {
+    "id": "vendor-123"
   }
 }
 ```
@@ -123,12 +163,12 @@ List all vendors in the account with optional filtering.
 List bills (accounts payable) with filtering options.
 
 **Parameters**:
-- `page` (number, optional): Page number (default: 1)
-- `page_size` (number, optional): Results per page (default: 50, max: 100)
+- `limit` (number, optional): Maximum number of bills to return (default: 50, max: 100)
+- `offset` (number, optional): Number of bills to skip for pagination (default: 0)
 - `status` (string, optional): Filter by status (`draft`, `open`, `scheduled`, `paid`, `void`)
-- `vendor_id` (string, optional): Filter by vendor ID
-- `start_date` (string, optional): Filter by creation date (YYYY-MM-DD)
-- `end_date` (string, optional): Filter by creation date (YYYY-MM-DD)
+- `vendorId` (string, optional): Filter by vendor ID
+- `startDate` (string, optional): Filter by creation date (YYYY-MM-DD)
+- `endDate` (string, optional): Filter by creation date (YYYY-MM-DD)
 
 **Example**:
 ```json
@@ -136,10 +176,62 @@ List bills (accounts payable) with filtering options.
   "name": "list_bills",
   "arguments": {
     "status": "open",
-    "page_size": 10
+    "limit": 10
   }
 }
 ```
+
+### `get_bill`
+
+Get detailed information about a specific bill by ID.
+
+**Parameters**:
+- `id` (string, required): The bill ID
+
+**Example**:
+```json
+{
+  "name": "get_bill",
+  "arguments": {
+    "id": "bill-123"
+  }
+}
+```
+
+## Roadmap
+
+### High Priority Features (TODO)
+
+#### Payments (AP Workflow)
+- [ ] `list_payments` - List all payments with filtering
+- [ ] `get_payment` - Get payment details by ID
+- [ ] `create_payment` - Create a new payment
+- [ ] `cancel_payment` - Cancel a payment
+
+#### Invoices (AR - Accounts Receivable)
+- [ ] `list_invoices` - List all invoices with filtering
+- [ ] `get_invoice` - Get invoice details by ID
+- [ ] `create_invoice` - Create a new invoice
+- [ ] `send_invoice` - Send an invoice to a customer
+
+#### Customers (AR Workflow)
+- [ ] `list_customers` - List all customers with filtering
+- [ ] `get_customer` - Get customer details by ID
+- [ ] `create_customer` - Create a new customer
+
+### Medium Priority Features (TODO)
+
+#### Write Operations for Vendors & Bills
+- [ ] `create_vendor` - Create a new vendor
+- [ ] `update_vendor` - Update vendor details
+- [ ] `create_bill` - Create a new bill
+- [ ] `update_bill` - Update bill details
+
+#### Bank Accounts
+- [ ] `list_bank_accounts` - List all bank accounts
+- [ ] `get_bank_account` - Get bank account details
+
+All these endpoints use the same session-based authentication already implemented in the server.
 
 ## Integration with Claude Desktop
 

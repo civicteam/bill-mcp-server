@@ -20,17 +20,23 @@ import { tools } from "./tools/index.js";
  * Get Bill.com API configuration from environment variables
  */
 function getBillConfig() {
-  const apiToken = process.env.BILL_API_TOKEN || process.env.BILL_COM_API_TOKEN;
+  const devKey = process.env.BILL_DEV_KEY;
+  const username = process.env.BILL_USERNAME;
+  const password = process.env.BILL_PASSWORD;
+  const organizationId = process.env.BILL_ORGANIZATION_ID;
   const environment = process.env.BILL_ENVIRONMENT || "sandbox";
 
-  if (!apiToken) {
+  if (!devKey || !username || !password || !organizationId) {
     throw new Error(
-      "Bill.com API token not found. Please set BILL_API_TOKEN or BILL_COM_API_TOKEN environment variable."
+      "Bill.com credentials not found. Please set BILL_DEV_KEY, BILL_USERNAME, BILL_PASSWORD, and BILL_ORGANIZATION_ID environment variables."
     );
   }
 
   return {
-    apiToken,
+    devKey,
+    username,
+    password,
+    organizationId,
     environment: environment as "sandbox" | "production",
   };
 }

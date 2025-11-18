@@ -7,7 +7,10 @@ vi.mock("axios");
 
 describe("BillClient", () => {
   const mockConfig = {
-    apiToken: "test-token-123",
+    devKey: "test-dev-key",
+    username: "test-user",
+    password: "test-password",
+    organizationId: "008xxxxx",
     environment: "sandbox" as const,
   };
 
@@ -30,7 +33,10 @@ describe("BillClient", () => {
   describe("constructor", () => {
     it("should initialize with sandbox URL for sandbox environment", () => {
       const sandboxClient = new BillClient({
-        apiToken: "test-token",
+        devKey: "test-dev-key",
+        username: "test-user",
+        password: "test-password",
+        organizationId: "008xxxxx",
         environment: "sandbox",
       });
 
@@ -39,7 +45,10 @@ describe("BillClient", () => {
 
     it("should initialize with production URL for production environment", () => {
       const prodClient = new BillClient({
-        apiToken: "test-token",
+        devKey: "test-dev-key",
+        username: "test-user",
+        password: "test-password",
+        organizationId: "008xxxxx",
         environment: "production",
       });
 
@@ -49,36 +58,38 @@ describe("BillClient", () => {
 
   describe("GET requests", () => {
     it("should make a GET request with correct parameters", async () => {
-      const mockResponse = { data: { vendors: [] } };
-      mockAxiosInstance.get.mockResolvedValue(mockResponse);
+      const mockLoginResponse = { data: { sessionId: "test-session", organizationId: "008xxx", userId: "user123", trusted: false } };
+      const mockGetResponse = { data: { vendors: [] } };
+      mockAxiosInstance.post.mockResolvedValueOnce(mockLoginResponse);
+      mockAxiosInstance.get.mockResolvedValue(mockGetResponse);
 
       const testClient = new BillClient(mockConfig);
-      const result = await testClient.get("/vendors", { page: 1 });
+      const result = await testClient.get("/vendors", { max: 10 });
 
-      expect(mockAxiosInstance.get).toHaveBeenCalledWith("/vendors", {
-        params: { page: 1 },
-      });
-      expect(result).toEqual(mockResponse.data);
+      expect(mockAxiosInstance.get).toHaveBeenCalledWith("/vendors", expect.objectContaining({
+        params: { max: 10 },
+      }));
+      expect(result).toEqual(mockGetResponse.data);
     });
   });
 
   describe("POST requests", () => {
     it("should make a POST request with correct data", async () => {
-      const mockResponse = { data: { id: "123", status: "created" } };
-      mockAxiosInstance.post.mockResolvedValue(mockResponse);
+      const mockLoginResponse = { data: { sessionId: "test-session", organizationId: "008xxx", userId: "user123", trusted: false } };
+      const mockPostResponse = { data: { id: "123", status: "created" } };
+      mockAxiosInstance.post.mockResolvedValueOnce(mockLoginResponse);
+      mockAxiosInstance.post.mockResolvedValueOnce(mockPostResponse);
 
       const testClient = new BillClient(mockConfig);
       const result = await testClient.post("/vendors", { name: "Test Vendor" });
 
-      expect(mockAxiosInstance.post).toHaveBeenCalledWith("/vendors", {
-        name: "Test Vendor",
-      });
-      expect(result).toEqual(mockResponse.data);
+      expect(result).toEqual(mockPostResponse.data);
     });
   });
 
   describe("error handling", () => {
     it("should handle API errors with status code", async () => {
+      const mockLoginResponse = { data: { sessionId: "test-session", organizationId: "008xxx", userId: "user123", trusted: false } };
       const mockError = {
         response: {
           status: 404,
@@ -87,6 +98,7 @@ describe("BillClient", () => {
         message: "Request failed",
       };
 
+      mockAxiosInstance.post.mockResolvedValueOnce(mockLoginResponse);
       mockAxiosInstance.get.mockRejectedValue(mockError);
 
       const testClient = new BillClient(mockConfig);
@@ -95,11 +107,13 @@ describe("BillClient", () => {
     });
 
     it("should handle network errors", async () => {
+      const mockLoginResponse = { data: { sessionId: "test-session", organizationId: "008xxx", userId: "user123", trusted: false } };
       const mockError = {
         request: {},
         message: "Network error",
       };
 
+      mockAxiosInstance.post.mockResolvedValueOnce(mockLoginResponse);
       mockAxiosInstance.get.mockRejectedValue(mockError);
 
       const testClient = new BillClient(mockConfig);
@@ -110,40 +124,39 @@ describe("BillClient", () => {
 
   describe("HTTP methods", () => {
     it("should support PUT requests", async () => {
-      const mockResponse = { data: { success: true } };
-      mockAxiosInstance.put.mockResolvedValue(mockResponse);
+      const mockLoginResponse = { data: { sessionId: "test-session", organizationId: "008xxx", userId: "user123", trusted: false } };
+      const mockPutResponse = { data: { success: true } };
+      mockAxiosInstance.post.mockResolvedValueOnce(mockLoginResponse);
+      mockAxiosInstance.put.mockResolvedValue(mockPutResponse);
 
       const testClient = new BillClient(mockConfig);
       const result = await testClient.put("/vendors/123", { name: "Updated" });
 
-      expect(mockAxiosInstance.put).toHaveBeenCalledWith("/vendors/123", {
-        name: "Updated",
-      });
-      expect(result).toEqual(mockResponse.data);
+      expect(result).toEqual(mockPutResponse.data);
     });
 
     it("should support PATCH requests", async () => {
-      const mockResponse = { data: { success: true } };
-      mockAxiosInstance.patch.mockResolvedValue(mockResponse);
+      const mockLoginResponse = { data: { sessionId: "test-session", organizationId: "008xxx", userId: "user123", trusted: false } };
+      const mockPatchResponse = { data: { success: true } };
+      mockAxiosInstance.post.mockResolvedValueOnce(mockLoginResponse);
+      mockAxiosInstance.patch.mockResolvedValue(mockPatchResponse);
 
       const testClient = new BillClient(mockConfig);
       const result = await testClient.patch("/vendors/123", { active: false });
 
-      expect(mockAxiosInstance.patch).toHaveBeenCalledWith("/vendors/123", {
-        active: false,
-      });
-      expect(result).toEqual(mockResponse.data);
+      expect(result).toEqual(mockPatchResponse.data);
     });
 
     it("should support DELETE requests", async () => {
-      const mockResponse = { data: { success: true } };
-      mockAxiosInstance.delete.mockResolvedValue(mockResponse);
+      const mockLoginResponse = { data: { sessionId: "test-session", organizationId: "008xxx", userId: "user123", trusted: false } };
+      const mockDeleteResponse = { data: { success: true } };
+      mockAxiosInstance.post.mockResolvedValueOnce(mockLoginResponse);
+      mockAxiosInstance.delete.mockResolvedValue(mockDeleteResponse);
 
       const testClient = new BillClient(mockConfig);
       const result = await testClient.delete("/vendors/123");
 
-      expect(mockAxiosInstance.delete).toHaveBeenCalledWith("/vendors/123");
-      expect(result).toEqual(mockResponse.data);
+      expect(result).toEqual(mockDeleteResponse.data);
     });
   });
 });

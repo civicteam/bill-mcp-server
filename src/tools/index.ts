@@ -5,9 +5,8 @@
  */
 
 import { BillClient } from "../bill-client.js";
-import { listVendors } from "./vendors.js";
-import { listBills } from "./bills.js";
-import { getAccountInfo } from "./account.js";
+import { listVendors, getVendor } from "./vendors.js";
+import { listBills, getBill } from "./bills.js";
 
 export interface Tool {
   name: string;
@@ -21,10 +20,11 @@ export interface Tool {
 }
 
 /**
- * All available tools for Bill.com integration
+ * All available tools for Bill.com AP/AR API integration
  */
 export const tools: Tool[] = [
-  getAccountInfo,
   listVendors,
+  getVendor,
   listBills,
+  getBill,
 ];

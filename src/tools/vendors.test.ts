@@ -27,10 +27,7 @@ describe("listVendors tool", () => {
 
     const result = await listVendors.handler({}, mockClient);
 
-    expect(mockClient.get).toHaveBeenCalledWith("/vendors", {
-      page: 1,
-      pageSize: 50,
-    });
+    expect(mockClient.get).toHaveBeenCalledWith("/vendors", undefined);
     expect(result).toEqual({
       success: true,
       data: mockData,
@@ -42,17 +39,17 @@ describe("listVendors tool", () => {
     vi.mocked(mockClient.get).mockResolvedValue(mockData);
 
     const args = {
-      page: 2,
-      page_size: 10,
+      limit: 10,
+      offset: 20,
       name: "Test",
-      active: true,
+      isActive: true,
     };
 
     const result = await listVendors.handler(args, mockClient);
 
     expect(mockClient.get).toHaveBeenCalledWith("/vendors", {
-      page: 2,
-      pageSize: 10,
+      max: 10,
+      offset: 20,
       name: "Test",
       isActive: true,
     });
@@ -81,8 +78,6 @@ describe("listVendors tool", () => {
     const result = await listVendors.handler({ name: "Acme" }, mockClient);
 
     expect(mockClient.get).toHaveBeenCalledWith("/vendors", {
-      page: 1,
-      pageSize: 50,
       name: "Acme",
     });
   });
@@ -91,11 +86,9 @@ describe("listVendors tool", () => {
     const mockData = { vendors: [] };
     vi.mocked(mockClient.get).mockResolvedValue(mockData);
 
-    const result = await listVendors.handler({ active: false }, mockClient);
+    const result = await listVendors.handler({ isActive: false }, mockClient);
 
     expect(mockClient.get).toHaveBeenCalledWith("/vendors", {
-      page: 1,
-      pageSize: 50,
       isActive: false,
     });
   });

@@ -1,14 +1,17 @@
 /**
  * Bill.com API Client
  *
- * Provides a wrapper around the Bill.com REST API with authentication
+ * Provides a wrapper around the Bill.com AP/AR API with session-based authentication
  * and error handling.
  */
 
 import axios, { AxiosInstance, AxiosError } from "axios";
 
 export interface BillConfig {
-  apiToken: string;
+  devKey: string;
+  username: string;
+  password: string;
+  organizationId: string;
   environment: "sandbox" | "production";
 }
 
@@ -19,17 +22,25 @@ export interface BillApiError {
 }
 
 /**
- * Bill.com API Client
+ * Bill.com API Client with session management
  */
 export class BillClient {
   private client: AxiosInstance;
   private readonly baseUrl: string;
-  private readonly apiToken: string;
+  private readonly devKey: string;
+  private readonly username: string;
+  private readonly password: string;
+  private readonly organizationId: string;
+  private sessionId: string | null = null;
+  private sessionExpiresAt: number = 0;
 
   constructor(config: BillConfig) {
-    this.apiToken = config.apiToken;
+    this.devKey = config.devKey;
+    this.username = config.username;
+    this.password = config.password;
+    this.organizationId = config.organizationId;
 
-    // Set base URL based on environment
+    // Set base URL based on environment - AP/AR API uses /v3
     this.baseUrl =
       config.environment === "production"
         ? "https://gateway.prod.bill.com/connect/v3"
@@ -41,7 +52,6 @@ export class BillClient {
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
-        apiToken: this.apiToken,
       },
       timeout: 30000, // 30 second timeout
     });
@@ -56,16 +66,79 @@ export class BillClient {
   }
 
   /**
+   * Login and get session ID
+   */
+  private async login(): Promise<void> {
+    console.error("[Bill.com API] Logging in...");
+    try {
+      const response = await this.client.post("/login", {
+        username: this.username,
+        password: this.password,
+        organizationId: this.organizationId,
+        devKey: this.devKey,
+      });
+
+      console.error("[Bill.com API] Login response:", JSON.stringify(response.data, null, 2));
+
+      this.sessionId = response.data.sessionId;
+      if (!this.sessionId) {
+        throw new Error("No sessionId in login response");
+      }
+
+      // Session expires after 48 hours for AP/AR sync token
+      this.sessionExpiresAt = Date.now() + 48 * 60 * 60 * 1000;
+      console.error("[Bill.com API] Login successful, sessionId:", this.sessionId);
+    } catch (error) {
+      console.error("[Bill.com API] Login failed:", error);
+      throw new Error("Failed to login to Bill.com API");
+    }
+  }
+
+  /**
+   * Ensure we have a valid session
+   */
+  private async ensureSession(): Promise<void> {
+    // Check if session exists and is not expired (with 5 min buffer)
+    const bufferMs = 5 * 60 * 1000;
+    if (this.sessionId && Date.now() < this.sessionExpiresAt - bufferMs) {
+      return;
+    }
+
+    // Login to get new session
+    await this.login();
+  }
+
+  /**
+   * Get headers including session ID
+   */
+  private async getHeaders(): Promise<Record<string, string>> {
+    await this.ensureSession();
+    return {
+      sessionId: this.sessionId!,
+      devKey: this.devKey,
+    };
+  }
+
+  /**
    * Handle API errors and convert to a standard format
    */
   private handleError(error: AxiosError): BillApiError {
+    console.error("[Bill.com API] Error details:", {
+      status: error.response?.status,
+      data: error.response?.data,
+      message: error.message,
+    });
+
     if (error.response) {
       // The request was made and the server responded with a status code
       // that falls out of the range of 2xx
+      const errorData = error.response.data as any;
       return {
         error: "api_error",
         message:
-          (error.response.data as any)?.message ||
+          errorData?.message ||
+          errorData?.error ||
+          JSON.stringify(errorData) ||
           error.message ||
           "Unknown API error",
         status: error.response.status,
@@ -91,7 +164,9 @@ export class BillClient {
    * Make a GET request to the Bill.com API
    */
   async get<T = any>(endpoint: string, params?: Record<string, any>): Promise<T> {
-    const response = await this.client.get<T>(endpoint, { params });
+    const headers = await this.getHeaders();
+    console.error(`[Bill.com API] GET ${endpoint}`, { headers, params });
+    const response = await this.client.get<T>(endpoint, { params, headers });
     return response.data;
   }
 
@@ -99,7 +174,8 @@ export class BillClient {
    * Make a POST request to the Bill.com API
    */
   async post<T = any>(endpoint: string, data?: Record<string, any>): Promise<T> {
-    const response = await this.client.post<T>(endpoint, data);
+    const headers = await this.getHeaders();
+    const response = await this.client.post<T>(endpoint, data, { headers });
     return response.data;
   }
 
@@ -107,7 +183,8 @@ export class BillClient {
    * Make a PUT request to the Bill.com API
    */
   async put<T = any>(endpoint: string, data?: Record<string, any>): Promise<T> {
-    const response = await this.client.put<T>(endpoint, data);
+    const headers = await this.getHeaders();
+    const response = await this.client.put<T>(endpoint, data, { headers });
     return response.data;
   }
 
@@ -115,7 +192,8 @@ export class BillClient {
    * Make a PATCH request to the Bill.com API
    */
   async patch<T = any>(endpoint: string, data?: Record<string, any>): Promise<T> {
-    const response = await this.client.patch<T>(endpoint, data);
+    const headers = await this.getHeaders();
+    const response = await this.client.patch<T>(endpoint, data, { headers });
     return response.data;
   }
 
@@ -123,7 +201,8 @@ export class BillClient {
    * Make a DELETE request to the Bill.com API
    */
   async delete<T = any>(endpoint: string): Promise<T> {
-    const response = await this.client.delete<T>(endpoint);
+    const headers = await this.getHeaders();
+    const response = await this.client.delete<T>(endpoint, { headers });
     return response.data;
   }
 }

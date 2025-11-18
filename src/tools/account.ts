@@ -1,30 +1,29 @@
 /**
- * Account-related tools
+ * Account-related tools for AP/AR API
  */
 
 import { Tool } from "./index.js";
 import { BillClient } from "../bill-client.js";
 
 /**
- * Get account information
+ * Get organization information
  */
-export const getAccountInfo: Tool = {
-  name: "get_account_info",
+export const getOrganizationInfo: Tool = {
+  name: "get_organization_info",
   description:
-    "Get information about the current Bill.com account, including organization details and user permissions",
+    "Get information about the current Bill.com organization, including organization details and settings",
   inputSchema: {
     type: "object",
     properties: {},
     required: [],
   },
   handler: async (args: any, client: BillClient) => {
-    // Note: This endpoint may need to be adjusted based on Bill.com's actual API
-    // The exact endpoint for account info should be verified in their documentation
     try {
-      const accountInfo = await client.get("/organization");
+      // Using AP/AR API endpoint: GET /v3/organizations
+      const orgInfo = await client.get("/organizations");
       return {
         success: true,
-        data: accountInfo,
+        data: orgInfo,
       };
     } catch (error) {
       return {

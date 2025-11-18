@@ -27,10 +27,7 @@ describe("listBills tool", () => {
 
     const result = await listBills.handler({}, mockClient);
 
-    expect(mockClient.get).toHaveBeenCalledWith("/bills", {
-      page: 1,
-      pageSize: 50,
-    });
+    expect(mockClient.get).toHaveBeenCalledWith("/bills", undefined);
     expect(result).toEqual({
       success: true,
       data: mockData,
@@ -42,19 +39,19 @@ describe("listBills tool", () => {
     vi.mocked(mockClient.get).mockResolvedValue(mockData);
 
     const args = {
-      page: 3,
-      page_size: 25,
+      limit: 25,
+      offset: 50,
       status: "open",
-      vendor_id: "vendor-123",
-      start_date: "2025-01-01",
-      end_date: "2025-01-31",
+      vendorId: "vendor-123",
+      startDate: "2025-01-01",
+      endDate: "2025-01-31",
     };
 
     const result = await listBills.handler(args, mockClient);
 
     expect(mockClient.get).toHaveBeenCalledWith("/bills", {
-      page: 3,
-      pageSize: 25,
+      max: 25,
+      offset: 50,
       status: "open",
       vendorId: "vendor-123",
       startDate: "2025-01-01",
@@ -67,14 +64,14 @@ describe("listBills tool", () => {
   });
 
   it("should handle API errors", async () => {
-    const error = new Error("Network Error");
+    const error = new Error("API Error");
     vi.mocked(mockClient.get).mockRejectedValue(error);
 
     const result = await listBills.handler({}, mockClient);
 
     expect(result).toEqual({
       success: false,
-      error: "Network Error",
+      error: "API Error",
     });
   });
 
@@ -85,8 +82,6 @@ describe("listBills tool", () => {
     const result = await listBills.handler({ status: "paid" }, mockClient);
 
     expect(mockClient.get).toHaveBeenCalledWith("/bills", {
-      page: 1,
-      pageSize: 50,
       status: "paid",
     });
   });
@@ -97,15 +92,13 @@ describe("listBills tool", () => {
 
     const result = await listBills.handler(
       {
-        start_date: "2025-01-01",
-        end_date: "2025-12-31",
+        startDate: "2025-01-01",
+        endDate: "2025-12-31",
       },
       mockClient
     );
 
     expect(mockClient.get).toHaveBeenCalledWith("/bills", {
-      page: 1,
-      pageSize: 50,
       startDate: "2025-01-01",
       endDate: "2025-12-31",
     });

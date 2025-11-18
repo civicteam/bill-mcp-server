@@ -14,30 +14,30 @@ export const listBills: Tool = {
   inputSchema: {
     type: "object",
     properties: {
-      page: {
+      limit: {
         type: "number",
-        description: "Page number for pagination (default: 1)",
-        default: 1,
-      },
-      page_size: {
-        type: "number",
-        description: "Number of results per page (default: 50, max: 100)",
+        description: "Maximum number of bills to return (default: 50, max: 100)",
         default: 50,
+      },
+      offset: {
+        type: "number",
+        description: "Number of bills to skip for pagination (default: 0)",
+        default: 0,
       },
       status: {
         type: "string",
         description: "Filter by bill status",
         enum: ["draft", "open", "scheduled", "paid", "void"],
       },
-      vendor_id: {
+      vendorId: {
         type: "string",
         description: "Filter bills by vendor ID",
       },
-      start_date: {
+      startDate: {
         type: "string",
         description: "Filter bills created after this date (YYYY-MM-DD format)",
       },
-      end_date: {
+      endDate: {
         type: "string",
         description: "Filter bills created before this date (YYYY-MM-DD format)",
       },
@@ -46,41 +46,78 @@ export const listBills: Tool = {
   },
   handler: async (args: any, client: BillClient) => {
     const {
-      page = 1,
-      page_size = 50,
+      limit,
+      offset,
       status,
-      vendor_id,
-      start_date,
-      end_date,
+      vendorId,
+      startDate,
+      endDate,
     } = args;
 
     try {
-      const params: Record<string, any> = {
-        page,
-        pageSize: page_size,
-      };
+      const params: Record<string, any> = {};
+
+      if (limit !== undefined) {
+        params.max = limit;
+      }
+
+      if (offset !== undefined) {
+        params.offset = offset;
+      }
 
       if (status) {
         params.status = status;
       }
 
-      if (vendor_id) {
-        params.vendorId = vendor_id;
+      if (vendorId) {
+        params.vendorId = vendorId;
       }
 
-      if (start_date) {
-        params.startDate = start_date;
+      if (startDate) {
+        params.startDate = startDate;
       }
 
-      if (end_date) {
-        params.endDate = end_date;
+      if (endDate) {
+        params.endDate = endDate;
       }
 
-      const bills = await client.get("/bills", params);
+      const bills = await client.get("/bills", Object.keys(params).length > 0 ? params : undefined);
 
       return {
         success: true,
         data: bills,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
+    }
+  },
+};
+
+/**
+ * Get bill details
+ */
+export const getBill: Tool = {
+  name: "get_bill",
+  description: "Get detailed information about a specific bill by ID",
+  inputSchema: {
+    type: "object",
+    properties: {
+      id: {
+        type: "string",
+        description: "The bill ID",
+      },
+    },
+    required: ["id"],
+  },
+  handler: async (args: any, client: BillClient) => {
+    try {
+      const bill = await client.get(`/bills/${args.id}`);
+      return {
+        success: true,
+        data: bill,
       };
     } catch (error) {
       return {
