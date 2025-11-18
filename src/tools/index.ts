@@ -5,11 +5,12 @@
  */
 
 import { BillClient } from "../bill-client.js";
-import { listVendors, getVendor } from "./vendors.js";
-import { listBills, getBill } from "./bills.js";
+import { listVendors, getVendor, createVendor, updateVendor } from "./vendors.js";
+import { listBills, getBill, createBill, updateBill } from "./bills.js";
 import { listPayments, getPayment, createPayment, cancelPayment } from "./payments.js";
 import { listInvoices, getInvoice, createInvoice, sendInvoice } from "./invoices.js";
 import { listCustomers, getCustomer, createCustomer } from "./customers.js";
+import { listBankAccounts, getBankAccount } from "./bank-accounts.js";
 
 export interface Tool {
   name: string;
@@ -29,9 +30,13 @@ export const tools: Tool[] = [
   // Vendors (AP)
   listVendors,
   getVendor,
+  createVendor,
+  updateVendor,
   // Bills (AP)
   listBills,
   getBill,
+  createBill,
+  updateBill,
   // Payments (AP)
   listPayments,
   getPayment,
@@ -46,4 +51,7 @@ export const tools: Tool[] = [
   getInvoice,
   createInvoice,
   sendInvoice,
+  // Bank Accounts
+  listBankAccounts,
+  getBankAccount,
 ];

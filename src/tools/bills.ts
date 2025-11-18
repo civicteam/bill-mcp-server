@@ -127,3 +127,160 @@ export const getBill: Tool = {
     }
   },
 };
+
+/**
+ * Create bill
+ */
+export const createBill: Tool = {
+  name: "create_bill",
+  description: "Create a new bill for a vendor",
+  inputSchema: {
+    type: "object",
+    properties: {
+      vendorId: {
+        type: "string",
+        description: "The vendor ID",
+      },
+      invoiceNumber: {
+        type: "string",
+        description: "Vendor's invoice number",
+      },
+      invoiceDate: {
+        type: "string",
+        description: "Invoice date (YYYY-MM-DD format)",
+      },
+      dueDate: {
+        type: "string",
+        description: "Payment due date (YYYY-MM-DD format)",
+      },
+      lineItems: {
+        type: "array",
+        description: "Bill line items",
+        items: {
+          type: "object",
+          properties: {
+            description: {
+              type: "string",
+              description: "Item description",
+            },
+            quantity: {
+              type: "number",
+              description: "Quantity",
+            },
+            unitPrice: {
+              type: "number",
+              description: "Unit price",
+            },
+            amount: {
+              type: "number",
+              description: "Line total amount",
+            },
+            chartOfAccountId: {
+              type: "string",
+              description: "Chart of account ID for categorization",
+            },
+          },
+          required: ["description", "amount"],
+        },
+      },
+      description: {
+        type: "string",
+        description: "Bill description or memo",
+      },
+    },
+    required: ["vendorId", "invoiceDate", "dueDate", "lineItems"],
+  },
+  handler: async (args: any, client: BillClient) => {
+    try {
+      const bill = await client.post("/bills", args);
+      return {
+        success: true,
+        data: bill,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
+    }
+  },
+};
+
+/**
+ * Update bill
+ */
+export const updateBill: Tool = {
+  name: "update_bill",
+  description: "Update an existing bill",
+  inputSchema: {
+    type: "object",
+    properties: {
+      id: {
+        type: "string",
+        description: "The bill ID to update",
+      },
+      invoiceNumber: {
+        type: "string",
+        description: "Vendor's invoice number",
+      },
+      invoiceDate: {
+        type: "string",
+        description: "Invoice date (YYYY-MM-DD format)",
+      },
+      dueDate: {
+        type: "string",
+        description: "Payment due date (YYYY-MM-DD format)",
+      },
+      lineItems: {
+        type: "array",
+        description: "Bill line items",
+        items: {
+          type: "object",
+          properties: {
+            description: {
+              type: "string",
+              description: "Item description",
+            },
+            quantity: {
+              type: "number",
+              description: "Quantity",
+            },
+            unitPrice: {
+              type: "number",
+              description: "Unit price",
+            },
+            amount: {
+              type: "number",
+              description: "Line total amount",
+            },
+            chartOfAccountId: {
+              type: "string",
+              description: "Chart of account ID for categorization",
+            },
+          },
+          required: ["description", "amount"],
+        },
+      },
+      description: {
+        type: "string",
+        description: "Bill description or memo",
+      },
+    },
+    required: ["id"],
+  },
+  handler: async (args: any, client: BillClient) => {
+    try {
+      const { id, ...updateData } = args;
+      const bill = await client.patch(`/bills/${id}`, updateData);
+      return {
+        success: true,
+        data: bill,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
+    }
+  },
+};

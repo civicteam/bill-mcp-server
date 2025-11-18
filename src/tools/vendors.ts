@@ -103,3 +103,173 @@ export const getVendor: Tool = {
     }
   },
 };
+
+/**
+ * Create vendor
+ */
+export const createVendor: Tool = {
+  name: "create_vendor",
+  description: "Create a new vendor in Bill.com",
+  inputSchema: {
+    type: "object",
+    properties: {
+      name: {
+        type: "string",
+        description: "Vendor name",
+      },
+      email: {
+        type: "string",
+        description: "Vendor email address",
+      },
+      phone: {
+        type: "string",
+        description: "Vendor phone number",
+      },
+      address: {
+        type: "object",
+        description: "Vendor address",
+        properties: {
+          line1: {
+            type: "string",
+            description: "Address line 1",
+          },
+          line2: {
+            type: "string",
+            description: "Address line 2",
+          },
+          city: {
+            type: "string",
+            description: "City",
+          },
+          state: {
+            type: "string",
+            description: "State/Province",
+          },
+          zip: {
+            type: "string",
+            description: "ZIP/Postal code",
+          },
+          country: {
+            type: "string",
+            description: "Country code (e.g., US)",
+          },
+        },
+      },
+      accountNumber: {
+        type: "string",
+        description: "Account number for this vendor",
+      },
+      taxId: {
+        type: "string",
+        description: "Tax ID or EIN",
+      },
+      isActive: {
+        type: "boolean",
+        description: "Whether the vendor is active (default: true)",
+        default: true,
+      },
+    },
+    required: ["name"],
+  },
+  handler: async (args: any, client: BillClient) => {
+    try {
+      const vendor = await client.post("/vendors", args);
+      return {
+        success: true,
+        data: vendor,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
+    }
+  },
+};
+
+/**
+ * Update vendor
+ */
+export const updateVendor: Tool = {
+  name: "update_vendor",
+  description: "Update an existing vendor in Bill.com",
+  inputSchema: {
+    type: "object",
+    properties: {
+      id: {
+        type: "string",
+        description: "The vendor ID to update",
+      },
+      name: {
+        type: "string",
+        description: "Vendor name",
+      },
+      email: {
+        type: "string",
+        description: "Vendor email address",
+      },
+      phone: {
+        type: "string",
+        description: "Vendor phone number",
+      },
+      address: {
+        type: "object",
+        description: "Vendor address",
+        properties: {
+          line1: {
+            type: "string",
+            description: "Address line 1",
+          },
+          line2: {
+            type: "string",
+            description: "Address line 2",
+          },
+          city: {
+            type: "string",
+            description: "City",
+          },
+          state: {
+            type: "string",
+            description: "State/Province",
+          },
+          zip: {
+            type: "string",
+            description: "ZIP/Postal code",
+          },
+          country: {
+            type: "string",
+            description: "Country code (e.g., US)",
+          },
+        },
+      },
+      accountNumber: {
+        type: "string",
+        description: "Account number for this vendor",
+      },
+      taxId: {
+        type: "string",
+        description: "Tax ID or EIN",
+      },
+      isActive: {
+        type: "boolean",
+        description: "Whether the vendor is active",
+      },
+    },
+    required: ["id"],
+  },
+  handler: async (args: any, client: BillClient) => {
+    try {
+      const { id, ...updateData } = args;
+      const vendor = await client.patch(`/vendors/${id}`, updateData);
+      return {
+        success: true,
+        data: vendor,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
+    }
+  },
+};

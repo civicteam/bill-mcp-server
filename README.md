@@ -10,10 +10,21 @@ This server uses the **Bill.com AP/AR API** with session-based authentication us
 
 ## Features
 
-- **Vendor Management**: List and search vendors
-- **Bill Operations**: View and manage bills (accounts payable)
-- **Organization Info**: Access organization details
-- **Session Management**: Automatic login and session refresh (48-hour sessions)
+### Accounts Payable (AP)
+- **Vendor Management**: List, view, create, and update vendors
+- **Bill Operations**: List, view, create, and update bills
+- **Payment Management**: List, view, create, and cancel payments
+
+### Accounts Receivable (AR)
+- **Customer Management**: List, view, and create customers
+- **Invoice Management**: List, view, create, and send invoices
+
+### Banking
+- **Bank Account Management**: List and view bank accounts
+
+### Core
+- **Session Management**: Automatic login and session refresh (48-hour sessions) - [Learn more](docs/SESSION_MANAGEMENT.md)
+- **Complete AP/AR Integration**: 21 tools covering all major Bill.com operations
 
 ## Prerequisites
 
@@ -158,6 +169,66 @@ Get detailed information about a specific vendor by ID.
 }
 ```
 
+### `create_vendor`
+
+Create a new vendor in Bill.com.
+
+**Parameters**:
+- `name` (string, required): Vendor name
+- `email` (string, optional): Vendor email address
+- `phone` (string, optional): Vendor phone number
+- `address` (object, optional): Vendor address with line1, line2, city, state, zip, country
+- `accountNumber` (string, optional): Account number for this vendor
+- `taxId` (string, optional): Tax ID or EIN
+- `isActive` (boolean, optional): Whether the vendor is active (default: true)
+
+**Example**:
+```json
+{
+  "name": "create_vendor",
+  "arguments": {
+    "name": "Acme Supplies Inc",
+    "email": "billing@acmesupplies.com",
+    "phone": "+1-555-0200",
+    "address": {
+      "line1": "456 Vendor Ave",
+      "city": "Los Angeles",
+      "state": "CA",
+      "zip": "90001",
+      "country": "US"
+    },
+    "accountNumber": "ACME-001",
+    "taxId": "98-7654321"
+  }
+}
+```
+
+### `update_vendor`
+
+Update an existing vendor in Bill.com.
+
+**Parameters**:
+- `id` (string, required): The vendor ID to update
+- `name` (string, optional): Vendor name
+- `email` (string, optional): Vendor email address
+- `phone` (string, optional): Vendor phone number
+- `address` (object, optional): Vendor address with line1, line2, city, state, zip, country
+- `accountNumber` (string, optional): Account number for this vendor
+- `taxId` (string, optional): Tax ID or EIN
+- `isActive` (boolean, optional): Whether the vendor is active
+
+**Example**:
+```json
+{
+  "name": "update_vendor",
+  "arguments": {
+    "id": "vendor-123",
+    "email": "newemail@acmesupplies.com",
+    "isActive": false
+  }
+}
+```
+
 ### `list_bills`
 
 List bills (accounts payable) with filtering options.
@@ -198,6 +269,68 @@ Get detailed information about a specific bill by ID.
 }
 ```
 
+### `create_bill`
+
+Create a new bill for a vendor.
+
+**Parameters**:
+- `vendorId` (string, required): The vendor ID
+- `invoiceNumber` (string, optional): Vendor's invoice number
+- `invoiceDate` (string, required): Invoice date (YYYY-MM-DD format)
+- `dueDate` (string, required): Payment due date (YYYY-MM-DD format)
+- `lineItems` (array, required): Bill line items with description, quantity, unitPrice, amount, chartOfAccountId
+- `description` (string, optional): Bill description or memo
+
+**Example**:
+```json
+{
+  "name": "create_bill",
+  "arguments": {
+    "vendorId": "vendor-123",
+    "invoiceNumber": "INV-2025-456",
+    "invoiceDate": "2025-11-15",
+    "dueDate": "2025-12-15",
+    "description": "Monthly office supplies",
+    "lineItems": [
+      {
+        "description": "Paper supplies",
+        "quantity": 10,
+        "unitPrice": 25.00,
+        "amount": 250.00
+      },
+      {
+        "description": "Printer ink",
+        "amount": 75.00
+      }
+    ]
+  }
+}
+```
+
+### `update_bill`
+
+Update an existing bill.
+
+**Parameters**:
+- `id` (string, required): The bill ID to update
+- `invoiceNumber` (string, optional): Vendor's invoice number
+- `invoiceDate` (string, optional): Invoice date (YYYY-MM-DD format)
+- `dueDate` (string, optional): Payment due date (YYYY-MM-DD format)
+- `lineItems` (array, optional): Bill line items
+- `description` (string, optional): Bill description or memo
+
+**Example**:
+```json
+{
+  "name": "update_bill",
+  "arguments": {
+    "id": "bill-123",
+    "dueDate": "2025-12-31",
+    "description": "Updated payment terms"
+  }
+}
+```
+
 ### `list_payments`
 
 List all payments with optional filtering.
@@ -210,12 +343,33 @@ List all payments with optional filtering.
 - `startDate` (string, optional): Filter by creation date (YYYY-MM-DD)
 - `endDate` (string, optional): Filter by creation date (YYYY-MM-DD)
 
+**Example**:
+```json
+{
+  "name": "list_payments",
+  "arguments": {
+    "status": "completed",
+    "limit": 10
+  }
+}
+```
+
 ### `get_payment`
 
 Get detailed information about a specific payment by ID.
 
 **Parameters**:
 - `id` (string, required): The payment ID
+
+**Example**:
+```json
+{
+  "name": "get_payment",
+  "arguments": {
+    "id": "payment-123"
+  }
+}
+```
 
 ### `create_payment`
 
@@ -228,12 +382,36 @@ Create a new payment for a vendor.
 - `description` (string, optional): Payment description or memo
 - `billIds` (array, optional): Array of bill IDs to pay
 
+**Example**:
+```json
+{
+  "name": "create_payment",
+  "arguments": {
+    "vendorId": "vendor-123",
+    "amount": 1500.00,
+    "processDate": "2025-11-25",
+    "description": "Payment for November services",
+    "billIds": ["bill-456", "bill-789"]
+  }
+}
+```
+
 ### `cancel_payment`
 
 Cancel a scheduled payment.
 
 **Parameters**:
 - `id` (string, required): The payment ID to cancel
+
+**Example**:
+```json
+{
+  "name": "cancel_payment",
+  "arguments": {
+    "id": "payment-123"
+  }
+}
+```
 
 ### `list_customers`
 
@@ -245,12 +423,33 @@ List all customers with optional filtering.
 - `name` (string, optional): Filter by customer name
 - `isActive` (boolean, optional): Filter by active status
 
+**Example**:
+```json
+{
+  "name": "list_customers",
+  "arguments": {
+    "limit": 20,
+    "isActive": true
+  }
+}
+```
+
 ### `get_customer`
 
 Get detailed information about a specific customer by ID.
 
 **Parameters**:
 - `id` (string, required): The customer ID
+
+**Example**:
+```json
+{
+  "name": "get_customer",
+  "arguments": {
+    "id": "customer-123"
+  }
+}
+```
 
 ### `create_customer`
 
@@ -264,6 +463,26 @@ Create a new customer in Bill.com.
 - `taxId` (string, optional): Tax ID or EIN
 - `isActive` (boolean, optional): Whether the customer is active (default: true)
 
+**Example**:
+```json
+{
+  "name": "create_customer",
+  "arguments": {
+    "name": "Acme Corporation",
+    "email": "billing@acme.com",
+    "phone": "+1-555-0100",
+    "address": {
+      "line1": "123 Main St",
+      "city": "San Francisco",
+      "state": "CA",
+      "zip": "94105",
+      "country": "US"
+    },
+    "taxId": "12-3456789"
+  }
+}
+```
+
 ### `list_invoices`
 
 List all invoices with optional filtering.
@@ -276,12 +495,33 @@ List all invoices with optional filtering.
 - `startDate` (string, optional): Filter by creation date (YYYY-MM-DD)
 - `endDate` (string, optional): Filter by creation date (YYYY-MM-DD)
 
+**Example**:
+```json
+{
+  "name": "list_invoices",
+  "arguments": {
+    "status": "sent",
+    "limit": 10
+  }
+}
+```
+
 ### `get_invoice`
 
 Get detailed information about a specific invoice by ID.
 
 **Parameters**:
 - `id` (string, required): The invoice ID
+
+**Example**:
+```json
+{
+  "name": "get_invoice",
+  "arguments": {
+    "id": "invoice-123"
+  }
+}
+```
 
 ### `create_invoice`
 
@@ -295,6 +535,32 @@ Create a new invoice for a customer.
 - `invoiceNumber` (string, optional): Invoice number
 - `description` (string, optional): Invoice description or memo
 
+**Example**:
+```json
+{
+  "name": "create_invoice",
+  "arguments": {
+    "customerId": "customer-123",
+    "invoiceNumber": "INV-2025-001",
+    "invoiceDate": "2025-11-18",
+    "dueDate": "2025-12-18",
+    "description": "November consulting services",
+    "lineItems": [
+      {
+        "description": "Consulting hours",
+        "quantity": 40,
+        "unitPrice": 150.00,
+        "amount": 6000.00
+      },
+      {
+        "description": "Project management",
+        "amount": 1000.00
+      }
+    ]
+  }
+}
+```
+
 ### `send_invoice`
 
 Send an invoice to the customer via email.
@@ -303,21 +569,73 @@ Send an invoice to the customer via email.
 - `id` (string, required): The invoice ID to send
 - `emailMessage` (string, optional): Custom email message
 
+**Example**:
+```json
+{
+  "name": "send_invoice",
+  "arguments": {
+    "id": "invoice-123",
+    "emailMessage": "Thank you for your business! Payment is due within 30 days."
+  }
+}
+```
+
+### `list_bank_accounts`
+
+List all bank accounts in the Bill.com account.
+
+**Parameters**:
+- `limit` (number, optional): Maximum number of bank accounts to return (default: 50, max: 100)
+- `offset` (number, optional): Number of bank accounts to skip for pagination (default: 0)
+- `isActive` (boolean, optional): Filter by active status
+
+**Example**:
+```json
+{
+  "name": "list_bank_accounts",
+  "arguments": {
+    "limit": 20,
+    "isActive": true
+  }
+}
+```
+
+### `get_bank_account`
+
+Get detailed information about a specific bank account by ID.
+
+**Parameters**:
+- `id` (string, required): The bank account ID
+
+**Example**:
+```json
+{
+  "name": "get_bank_account",
+  "arguments": {
+    "id": "bank-account-123"
+  }
+}
+```
+
 ## Roadmap
 
-### Medium Priority Features (TODO)
+All high and medium priority features have been implemented! The server now includes:
 
-#### Write Operations for Vendors & Bills
-- [ ] `create_vendor` - Create a new vendor
-- [ ] `update_vendor` - Update vendor details
-- [ ] `create_bill` - Create a new bill
-- [ ] `update_bill` - Update bill details
+- ✅ **Vendor Management**: List, view, create, and update vendors
+- ✅ **Bill Management**: List, view, create, and update bills
+- ✅ **Payment Management**: List, view, create, and cancel payments
+- ✅ **Customer Management**: List, view, and create customers
+- ✅ **Invoice Management**: List, view, create, and send invoices
+- ✅ **Bank Account Management**: List and view bank accounts
 
-#### Bank Accounts
-- [ ] `list_bank_accounts` - List all bank accounts
-- [ ] `get_bank_account` - Get bank account details
+### Future Enhancements (Optional)
 
-All these endpoints use the same session-based authentication already implemented in the server.
+- Update customer details
+- Update invoice details
+- Approve/reject payments
+- Recurring bill management
+- Chart of accounts management
+- Enhanced reporting and analytics
 
 ## Integration with Claude Desktop
 
