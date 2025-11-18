@@ -198,26 +198,112 @@ Get detailed information about a specific bill by ID.
 }
 ```
 
+### `list_payments`
+
+List all payments with optional filtering.
+
+**Parameters**:
+- `limit` (number, optional): Maximum number of payments to return (default: 50, max: 100)
+- `offset` (number, optional): Number of payments to skip for pagination (default: 0)
+- `status` (string, optional): Filter by status (`scheduled`, `processing`, `completed`, `cancelled`, `failed`)
+- `vendorId` (string, optional): Filter by vendor ID
+- `startDate` (string, optional): Filter by creation date (YYYY-MM-DD)
+- `endDate` (string, optional): Filter by creation date (YYYY-MM-DD)
+
+### `get_payment`
+
+Get detailed information about a specific payment by ID.
+
+**Parameters**:
+- `id` (string, required): The payment ID
+
+### `create_payment`
+
+Create a new payment for a vendor.
+
+**Parameters**:
+- `vendorId` (string, required): The vendor ID to pay
+- `amount` (number, required): Payment amount
+- `processDate` (string, required): Date to process the payment (YYYY-MM-DD)
+- `description` (string, optional): Payment description or memo
+- `billIds` (array, optional): Array of bill IDs to pay
+
+### `cancel_payment`
+
+Cancel a scheduled payment.
+
+**Parameters**:
+- `id` (string, required): The payment ID to cancel
+
+### `list_customers`
+
+List all customers with optional filtering.
+
+**Parameters**:
+- `limit` (number, optional): Maximum number of customers to return (default: 50, max: 100)
+- `offset` (number, optional): Number of customers to skip for pagination (default: 0)
+- `name` (string, optional): Filter by customer name
+- `isActive` (boolean, optional): Filter by active status
+
+### `get_customer`
+
+Get detailed information about a specific customer by ID.
+
+**Parameters**:
+- `id` (string, required): The customer ID
+
+### `create_customer`
+
+Create a new customer in Bill.com.
+
+**Parameters**:
+- `name` (string, required): Customer name
+- `email` (string, optional): Customer email address
+- `phone` (string, optional): Customer phone number
+- `address` (object, optional): Customer address with line1, line2, city, state, zip, country
+- `taxId` (string, optional): Tax ID or EIN
+- `isActive` (boolean, optional): Whether the customer is active (default: true)
+
+### `list_invoices`
+
+List all invoices with optional filtering.
+
+**Parameters**:
+- `limit` (number, optional): Maximum number of invoices to return (default: 50, max: 100)
+- `offset` (number, optional): Number of invoices to skip for pagination (default: 0)
+- `status` (string, optional): Filter by status (`draft`, `sent`, `viewed`, `partiallyPaid`, `paid`, `void`)
+- `customerId` (string, optional): Filter by customer ID
+- `startDate` (string, optional): Filter by creation date (YYYY-MM-DD)
+- `endDate` (string, optional): Filter by creation date (YYYY-MM-DD)
+
+### `get_invoice`
+
+Get detailed information about a specific invoice by ID.
+
+**Parameters**:
+- `id` (string, required): The invoice ID
+
+### `create_invoice`
+
+Create a new invoice for a customer.
+
+**Parameters**:
+- `customerId` (string, required): The customer ID
+- `invoiceDate` (string, required): Invoice date (YYYY-MM-DD)
+- `dueDate` (string, required): Payment due date (YYYY-MM-DD)
+- `lineItems` (array, required): Invoice line items with description, quantity, unitPrice, amount
+- `invoiceNumber` (string, optional): Invoice number
+- `description` (string, optional): Invoice description or memo
+
+### `send_invoice`
+
+Send an invoice to the customer via email.
+
+**Parameters**:
+- `id` (string, required): The invoice ID to send
+- `emailMessage` (string, optional): Custom email message
+
 ## Roadmap
-
-### High Priority Features (TODO)
-
-#### Payments (AP Workflow)
-- [ ] `list_payments` - List all payments with filtering
-- [ ] `get_payment` - Get payment details by ID
-- [ ] `create_payment` - Create a new payment
-- [ ] `cancel_payment` - Cancel a payment
-
-#### Invoices (AR - Accounts Receivable)
-- [ ] `list_invoices` - List all invoices with filtering
-- [ ] `get_invoice` - Get invoice details by ID
-- [ ] `create_invoice` - Create a new invoice
-- [ ] `send_invoice` - Send an invoice to a customer
-
-#### Customers (AR Workflow)
-- [ ] `list_customers` - List all customers with filtering
-- [ ] `get_customer` - Get customer details by ID
-- [ ] `create_customer` - Create a new customer
 
 ### Medium Priority Features (TODO)
 
