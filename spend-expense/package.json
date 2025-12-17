@@ -1,12 +1,12 @@
 {
-  "name": "bill-mcp-server",
+  "name": "bill-spend-expense-mcp-server",
   "version": "0.1.0",
-  "description": "MCP Server for Bill.com API integration",
+  "description": "MCP Server for Bill.com Spend & Expense API integration",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "bill-mcp-server": "dist/index.js"
+    "bill-spend-expense-mcp-server": "dist/index.js"
   },
   "scripts": {
     "build": "tsc",
@@ -24,7 +24,8 @@
     "mcp",
     "model-context-protocol",
     "bill.com",
-    "accounting",
+    "spend",
+    "expense",
     "api"
   ],
   "author": "Civic",
