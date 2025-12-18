@@ -32,7 +32,7 @@ class BillSpendExpenseClient {
       method,
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${this.apiToken}`,
+        apiToken: this.apiToken,
       },
       body: data ? JSON.stringify(data) : undefined,
     });
@@ -45,40 +45,49 @@ class BillSpendExpenseClient {
     return response.json() as Promise<T>;
   }
 
-  // Expense Reports
-  async listExpenseReports() {
-    return this.request("GET", "/expense-reports");
+  // Budgets
+  async listBudgets() {
+    return this.request("GET", "/spend/budgets");
   }
 
-  async getExpenseReport(id: string) {
-    return this.request("GET", `/expense-reports/${id}`);
+  async getBudget(id: string) {
+    return this.request("GET", `/spend/budgets/${id}`);
+  }
+
+  // Reimbursements
+  async listReimbursements() {
+    return this.request("GET", "/spend/reimbursements");
+  }
+
+  async getReimbursement(id: string) {
+    return this.request("GET", `/spend/reimbursements/${id}`);
   }
 
   // Transactions
   async listTransactions() {
-    return this.request("GET", "/transactions");
+    return this.request("GET", "/spend/transactions");
   }
 
   async getTransaction(id: string) {
-    return this.request("GET", `/transactions/${id}`);
+    return this.request("GET", `/spend/transactions/${id}`);
   }
 
   // Cards
   async listCards() {
-    return this.request("GET", "/cards");
+    return this.request("GET", "/spend/cards");
   }
 
   async getCard(id: string) {
-    return this.request("GET", `/cards/${id}`);
+    return this.request("GET", `/spend/cards/${id}`);
   }
 
-  // Employees
-  async listEmployees() {
-    return this.request("GET", "/employees");
+  // Users
+  async listUsers() {
+    return this.request("GET", "/spend/users");
   }
 
-  async getEmployee(id: string) {
-    return this.request("GET", `/employees/${id}`);
+  async getUser(id: string) {
+    return this.request("GET", `/spend/users/${id}`);
   }
 }
 
@@ -113,8 +122,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
   return {
     tools: [
       {
-        name: "list_expense_reports",
-        description: "List all expense reports",
+        name: "list_budgets",
+        description: "List all budgets in the Spend & Expense account",
         inputSchema: {
           type: "object",
           properties: {},
@@ -122,14 +131,37 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         },
       },
       {
-        name: "get_expense_report",
-        description: "Get a specific expense report by ID",
+        name: "get_budget",
+        description: "Get a specific budget by ID",
         inputSchema: {
           type: "object",
           properties: {
             id: {
               type: "string",
-              description: "The expense report ID",
+              description: "The budget ID",
+            },
+          },
+          required: ["id"],
+        },
+      },
+      {
+        name: "list_reimbursements",
+        description: "List all reimbursement requests",
+        inputSchema: {
+          type: "object",
+          properties: {},
+          required: [],
+        },
+      },
+      {
+        name: "get_reimbursement",
+        description: "Get a specific reimbursement by ID",
+        inputSchema: {
+          type: "object",
+          properties: {
+            id: {
+              type: "string",
+              description: "The reimbursement ID",
             },
           },
           required: ["id"],
@@ -182,8 +214,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         },
       },
       {
-        name: "list_employees",
-        description: "List all employees",
+        name: "list_users",
+        description: "List all users in the Spend & Expense account",
         inputSchema: {
           type: "object",
           properties: {},
@@ -191,14 +223,14 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         },
       },
       {
-        name: "get_employee",
-        description: "Get a specific employee by ID",
+        name: "get_user",
+        description: "Get a specific user by ID",
         inputSchema: {
           type: "object",
           properties: {
             id: {
               type: "string",
-              description: "The employee ID",
+              description: "The user ID",
             },
           },
           required: ["id"],
@@ -216,8 +248,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     const apiClient = getClient();
 
     switch (name) {
-      case "list_expense_reports": {
-        const result = await apiClient.listExpenseReports();
+      case "list_budgets": {
+        const result = await apiClient.listBudgets();
         return {
           content: [
             {
@@ -228,9 +260,34 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         };
       }
 
-      case "get_expense_report": {
+      case "get_budget": {
         const { id } = args as { id: string };
-        const result = await apiClient.getExpenseReport(id);
+        const result = await apiClient.getBudget(id);
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(result, null, 2),
+            },
+          ],
+        };
+      }
+
+      case "list_reimbursements": {
+        const result = await apiClient.listReimbursements();
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(result, null, 2),
+            },
+          ],
+        };
+      }
+
+      case "get_reimbursement": {
+        const { id } = args as { id: string };
+        const result = await apiClient.getReimbursement(id);
         return {
           content: [
             {
@@ -291,8 +348,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         };
       }
 
-      case "list_employees": {
-        const result = await apiClient.listEmployees();
+      case "list_users": {
+        const result = await apiClient.listUsers();
         return {
           content: [
             {
@@ -303,9 +360,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         };
       }
 
-      case "get_employee": {
+      case "get_user": {
         const { id } = args as { id: string };
-        const result = await apiClient.getEmployee(id);
+        const result = await apiClient.getUser(id);
         return {
           content: [
             {
