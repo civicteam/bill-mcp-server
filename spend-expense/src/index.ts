@@ -9,7 +9,15 @@ import {
 
 // Environment variable for API token authentication
 const BILL_API_TOKEN = process.env.BILL_API_TOKEN;
-const API_BASE_URL = "https://gateway.stage.bill.com/connect/v3";
+const BILL_ENVIRONMENT = process.env.BILL_ENVIRONMENT || "production";
+
+// API base URLs for different environments
+const API_BASE_URLS: Record<string, string> = {
+  sandbox: "https://gateway.stage.bill.com/connect/v3",
+  production: "https://gateway.prod.bill.com/connect/v3",
+};
+
+const API_BASE_URL = API_BASE_URLS[BILL_ENVIRONMENT] || API_BASE_URLS.production;
 
 // API client for Bill.com Spend & Expense
 class BillSpendExpenseClient {

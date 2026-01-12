@@ -27,6 +27,7 @@ MCP server for Bill.com's Accounts Payable and Accounts Receivable API.
 - `BILL_USERNAME`
 - `BILL_PASSWORD`
 - `BILL_ORGANIZATION_ID`
+- `BILL_ENVIRONMENT` (optional, default: `production`)
 
 [Read more](./ap-ar/README.md)
 
@@ -36,6 +37,7 @@ MCP server for Bill.com's Spend & Expense API.
 
 **Authentication:** Single API token:
 - `BILL_API_TOKEN`
+- `BILL_ENVIRONMENT` (optional, default: `production`)
 
 [Read more](./spend-expense/README.md)
 

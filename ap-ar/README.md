@@ -64,8 +64,8 @@ BILL_PASSWORD=your_sync_token_value
 # Required: Organization ID (starts with 008)
 BILL_ORGANIZATION_ID=008xxxxxxxxxxxxx
 
-# Optional: Environment (default: sandbox)
-BILL_ENVIRONMENT=sandbox
+# Optional: Environment (default: production)
+BILL_ENVIRONMENT=production
 ```
 
 ### Getting Bill.com AP/AR API Credentials
@@ -126,7 +126,13 @@ npm start
 docker build -t bill-mcp-server .
 
 # Run the container
-docker run -e BILL_API_TOKEN=your_token_here bill-mcp-server
+docker run \
+  -e BILL_DEV_KEY=your_dev_key \
+  -e BILL_USERNAME=your_sync_token_name \
+  -e BILL_PASSWORD=your_sync_token_value \
+  -e BILL_ORGANIZATION_ID=008xxxxxxxxxxxxx \
+  -e BILL_ENVIRONMENT=production \
+  bill-mcp-server
 ```
 
 ## Available Tools
@@ -648,12 +654,15 @@ Add this server to your Claude Desktop configuration:
 ```json
 {
   "mcpServers": {
-    "bill-com": {
+    "bill-com-ap-ar": {
       "command": "node",
-      "args": ["/path/to/bill-mcp-server/dist/index.js"],
+      "args": ["/path/to/bill-mcp-server/ap-ar/dist/index.js"],
       "env": {
-        "BILL_API_TOKEN": "your_token_here",
-        "BILL_ENVIRONMENT": "sandbox"
+        "BILL_DEV_KEY": "your_dev_key",
+        "BILL_USERNAME": "your_sync_token_name",
+        "BILL_PASSWORD": "your_sync_token_value",
+        "BILL_ORGANIZATION_ID": "008xxxxxxxxxxxxx",
+        "BILL_ENVIRONMENT": "production"
       }
     }
   }

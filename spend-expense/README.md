@@ -8,15 +8,25 @@ This server uses token-based authentication with a single API token passed in th
 
 ### Environment Variables
 
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `BILL_API_TOKEN` | Your Bill.com Spend & Expense API token | Yes |
+| Variable | Description | Required | Default |
+|----------|-------------|----------|---------|
+| `BILL_API_TOKEN` | Your Bill.com Spend & Expense API token | Yes | - |
+| `BILL_ENVIRONMENT` | API environment (`sandbox` or `production`) | No | `production` |
+
+### API Endpoints
+
+- **Sandbox**: `https://gateway.stage.bill.com/connect/v3`
+- **Production**: `https://gateway.prod.bill.com/connect/v3`
 
 ## Available Tools
 
-### Expense Reports
-- `list_expense_reports` - List all expense reports
-- `get_expense_report` - Get a specific expense report by ID
+### Budgets
+- `list_budgets` - List all budgets in the Spend & Expense account
+- `get_budget` - Get a specific budget by ID
+
+### Reimbursements
+- `list_reimbursements` - List all reimbursement requests
+- `get_reimbursement` - Get a specific reimbursement by ID
 
 ### Transactions
 - `list_transactions` - List all transactions
@@ -26,9 +36,9 @@ This server uses token-based authentication with a single API token passed in th
 - `list_cards` - List all cards
 - `get_card` - Get a specific card by ID
 
-### Employees
-- `list_employees` - List all employees
-- `get_employee` - Get a specific employee by ID
+### Users
+- `list_users` - List all users in the Spend & Expense account
+- `get_user` - Get a specific user by ID
 
 ## Development
 
@@ -44,6 +54,16 @@ npm run dev
 
 # Run tests
 npm test
+```
+
+## Docker
+
+```bash
+# Build the Docker image
+docker build -t bill-spend-expense .
+
+# Run the container
+docker run -e BILL_API_TOKEN=your_token_here -e BILL_ENVIRONMENT=sandbox bill-spend-expense
 ```
 
 ## Related

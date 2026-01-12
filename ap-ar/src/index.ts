@@ -24,7 +24,7 @@ function getBillConfig() {
   const username = process.env.BILL_USERNAME;
   const password = process.env.BILL_PASSWORD;
   const organizationId = process.env.BILL_ORGANIZATION_ID;
-  const environment = process.env.BILL_ENVIRONMENT || "sandbox";
+  const environment = process.env.BILL_ENVIRONMENT || "production";
 
   if (!devKey || !username || !password || !organizationId) {
     throw new Error(
