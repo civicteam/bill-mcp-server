@@ -4,42 +4,61 @@
 
 import { Tool } from "./index.js";
 import { BillClient } from "../bill-client.js";
+import { buildListParams, type FilterClause } from "./list-params.js";
 
 /**
  * List payments
  */
 export const listPayments: Tool = {
   name: "list_payments",
-  description: "List payments with optional filtering by status, vendor, and date range",
+  description:
+    "List payments with filtering, sorting, and pagination. Returns newest first by default.",
   inputSchema: {
     type: "object",
     properties: {
       limit: {
         type: "number",
-        description: "Maximum number of payments to return (default: 50, max: 100)",
+        description:
+          "Maximum number of payments to return per page (default: 50, max: 100)",
         default: 50,
       },
-      offset: {
-        type: "number",
-        description: "Number of payments to skip for pagination (default: 0)",
-        default: 0,
+      page: {
+        type: "string",
+        description:
+          "Cursor token for the next page of results (from the nextPage field in a previous response). Omit for the first page.",
+      },
+      sort: {
+        type: "string",
+        description:
+          "Sort order in 'field:direction' format. Sortable fields: processDate, amount, createdTime, updatedTime, description, disbursementStatus. Default: 'createdTime:desc'. Example: 'processDate:desc'",
       },
       status: {
         type: "string",
         description: "Filter by payment status",
-        enum: ["scheduled", "processing", "completed", "cancelled", "failed"],
       },
       vendorId: {
         type: "string",
         description: "Filter payments by vendor ID",
       },
-      startDate: {
+      createdAfter: {
         type: "string",
-        description: "Filter payments created after this date (YYYY-MM-DD format)",
+        description:
+          "Filter payments created on or after this date (ISO 8601 format, e.g. 2025-01-01)",
       },
-      endDate: {
+      createdBefore: {
         type: "string",
-        description: "Filter payments created before this date (YYYY-MM-DD format)",
+        description:
+          "Filter payments created on or before this date (ISO 8601 format, e.g. 2025-12-31)",
+      },
+      processDateAfter: {
+        type: "string",
+        description:
+          "Filter payments processed on or after this date (ISO 8601 format)",
+      },
+      processDateBefore: {
+        type: "string",
+        description:
+          "Filter payments processed on or before this date (ISO 8601 format)",
       },
     },
     required: [],
@@ -47,41 +66,33 @@ export const listPayments: Tool = {
   handler: async (args: any, client: BillClient) => {
     const {
       limit,
-      offset,
+      page,
+      sort,
       status,
       vendorId,
-      startDate,
-      endDate,
+      createdAfter,
+      createdBefore,
+      processDateAfter,
+      processDateBefore,
     } = args;
 
     try {
-      const params: Record<string, any> = {};
+      const filters: FilterClause[] = [];
+      if (status)
+        filters.push({ field: "status", op: "eq", value: status });
+      if (vendorId)
+        filters.push({ field: "vendorId", op: "eq", value: vendorId });
+      if (createdAfter)
+        filters.push({ field: "createdTime", op: "gte", value: createdAfter });
+      if (createdBefore)
+        filters.push({ field: "createdTime", op: "lte", value: createdBefore });
+      if (processDateAfter)
+        filters.push({ field: "processDate", op: "gte", value: processDateAfter });
+      if (processDateBefore)
+        filters.push({ field: "processDate", op: "lte", value: processDateBefore });
 
-      if (limit !== undefined) {
-        params.max = limit;
-      }
-
-      if (offset !== undefined) {
-        params.offset = offset;
-      }
-
-      if (status) {
-        params.status = status;
-      }
-
-      if (vendorId) {
-        params.vendorId = vendorId;
-      }
-
-      if (startDate) {
-        params.startDate = startDate;
-      }
-
-      if (endDate) {
-        params.endDate = endDate;
-      }
-
-      const payments = await client.get("/payments", Object.keys(params).length > 0 ? params : undefined);
+      const params = buildListParams({ max: limit, page, sort, filters });
+      const payments = await client.get("/payments", params);
 
       return {
         success: true,

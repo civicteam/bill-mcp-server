@@ -4,52 +4,43 @@
 
 import { Tool } from "./index.js";
 import { BillClient } from "../bill-client.js";
+import { buildListParams } from "./list-params.js";
 
 /**
  * List bank accounts
  */
 export const listBankAccounts: Tool = {
   name: "list_bank_accounts",
-  description: "List all bank accounts in the Bill.com account",
+  description:
+    "List bank accounts in the Bill.com account with pagination. Returns newest first by default.",
   inputSchema: {
     type: "object",
     properties: {
       limit: {
         type: "number",
-        description: "Maximum number of bank accounts to return (default: 50, max: 100)",
+        description:
+          "Maximum number of bank accounts to return per page (default: 50, max: 100)",
         default: 50,
       },
-      offset: {
-        type: "number",
-        description: "Number of bank accounts to skip for pagination (default: 0)",
-        default: 0,
+      page: {
+        type: "string",
+        description:
+          "Cursor token for the next page of results (from the nextPage field in a previous response). Omit for the first page.",
       },
-      isActive: {
-        type: "boolean",
-        description: "Filter by active status",
+      sort: {
+        type: "string",
+        description:
+          "Sort order in 'field:direction' format. Default: 'createdTime:desc'",
       },
     },
     required: [],
   },
   handler: async (args: any, client: BillClient) => {
-    const { limit, offset, isActive } = args;
+    const { limit, page, sort } = args;
 
     try {
-      const params: Record<string, any> = {};
-
-      if (limit !== undefined) {
-        params.max = limit;
-      }
-
-      if (offset !== undefined) {
-        params.offset = offset;
-      }
-
-      if (isActive !== undefined) {
-        params.isActive = isActive;
-      }
-
-      const bankAccounts = await client.get("/bank-accounts", Object.keys(params).length > 0 ? params : undefined);
+      const params = buildListParams({ max: limit, page, sort });
+      const bankAccounts = await client.get("/bank-accounts", params);
 
       return {
         success: true,

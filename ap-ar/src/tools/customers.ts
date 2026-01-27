@@ -4,60 +4,73 @@
 
 import { Tool } from "./index.js";
 import { BillClient } from "../bill-client.js";
+import { buildListParams, type FilterClause } from "./list-params.js";
 
 /**
  * List customers
  */
 export const listCustomers: Tool = {
   name: "list_customers",
-  description: "List all customers in the Bill.com account with optional filtering",
+  description:
+    "List customers in the Bill.com account with filtering, sorting, and pagination. Returns newest first by default.",
   inputSchema: {
     type: "object",
     properties: {
       limit: {
         type: "number",
-        description: "Maximum number of customers to return (default: 50, max: 100)",
+        description:
+          "Maximum number of customers to return per page (default: 50, max: 100)",
         default: 50,
       },
-      offset: {
-        type: "number",
-        description: "Number of customers to skip for pagination (default: 0)",
-        default: 0,
+      page: {
+        type: "string",
+        description:
+          "Cursor token for the next page of results (from the nextPage field in a previous response). Omit for the first page.",
+      },
+      sort: {
+        type: "string",
+        description:
+          "Sort order in 'field:direction' format. Sortable fields: name, companyName, email, phone, invoiceCurrency, createdTime, updatedTime, archived. Default: 'createdTime:desc'. Example: 'name:asc'",
       },
       name: {
         type: "string",
-        description: "Filter customers by name (partial match)",
+        description:
+          "Filter customers whose name starts with this value (uses starts-with matching)",
       },
-      isActive: {
+      archived: {
         type: "boolean",
-        description: "Filter by active status",
+        description:
+          "Filter by archived status. Use false for active customers, true for archived.",
+      },
+      createdAfter: {
+        type: "string",
+        description:
+          "Filter customers created on or after this date (ISO 8601 format, e.g. 2025-01-01)",
+      },
+      createdBefore: {
+        type: "string",
+        description:
+          "Filter customers created on or before this date (ISO 8601 format, e.g. 2025-12-31)",
       },
     },
     required: [],
   },
   handler: async (args: any, client: BillClient) => {
-    const { limit, offset, name, isActive } = args;
+    const { limit, page, sort, name, archived, createdAfter, createdBefore } =
+      args;
 
     try {
-      const params: Record<string, any> = {};
+      const filters: FilterClause[] = [];
+      if (name) filters.push({ field: "name", op: "sw", value: name });
+      if (archived !== undefined)
+        filters.push({ field: "archived", op: "eq", value: archived });
+      if (createdAfter)
+        filters.push({ field: "createdTime", op: "gte", value: createdAfter });
+      if (createdBefore)
+        filters.push({ field: "createdTime", op: "lte", value: createdBefore });
 
-      if (limit !== undefined) {
-        params.max = limit;
-      }
-
-      if (offset !== undefined) {
-        params.offset = offset;
-      }
-
-      if (name) {
-        params.name = name;
-      }
-
-      if (isActive !== undefined) {
-        params.isActive = isActive;
-      }
-
-      const customers = await client.get("/customers", Object.keys(params).length > 0 ? params : undefined);
+      const params = buildListParams({ max: limit, page, sort, filters });
+      const customers = await client.get("/customers", params);
 
       return {
         success: true,
@@ -158,11 +171,6 @@ export const createCustomer: Tool = {
       taxId: {
         type: "string",
         description: "Tax ID or EIN",
-      },
-      isActive: {
-        type: "boolean",
-        description: "Whether the customer is active (default: true)",
-        default: true,
       },
     },
     required: ["name"],

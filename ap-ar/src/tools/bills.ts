@@ -4,42 +4,65 @@
 
 import { Tool } from "./index.js";
 import { BillClient } from "../bill-client.js";
+import { buildListParams, type FilterClause } from "./list-params.js";
 
 /**
  * List bills
  */
 export const listBills: Tool = {
   name: "list_bills",
-  description: "List bills (accounts payable) with optional filtering by status, vendor, and date range",
+  description:
+    "List bills (accounts payable) with filtering, sorting, and pagination. Returns newest first by default.",
   inputSchema: {
     type: "object",
     properties: {
       limit: {
         type: "number",
-        description: "Maximum number of bills to return (default: 50, max: 100)",
+        description:
+          "Maximum number of bills to return per page (default: 50, max: 100)",
         default: 50,
       },
-      offset: {
-        type: "number",
-        description: "Number of bills to skip for pagination (default: 0)",
-        default: 0,
-      },
-      status: {
+      page: {
         type: "string",
-        description: "Filter by bill status",
-        enum: ["draft", "open", "scheduled", "paid", "void"],
+        description:
+          "Cursor token for the next page of results (from the nextPage field in a previous response). Omit for the first page.",
+      },
+      sort: {
+        type: "string",
+        description:
+          "Sort order in 'field:direction' format. Sortable fields: dueDate, createdTime, updatedTime, fundingAmount, description, archived. Default: 'createdTime:desc'. Example: 'dueDate:asc'",
+      },
+      paymentStatus: {
+        type: "string",
+        description: "Filter by bill payment status",
       },
       vendorId: {
         type: "string",
         description: "Filter bills by vendor ID",
       },
-      startDate: {
-        type: "string",
-        description: "Filter bills created after this date (YYYY-MM-DD format)",
+      archived: {
+        type: "boolean",
+        description: "Filter by archived status",
       },
-      endDate: {
+      createdAfter: {
         type: "string",
-        description: "Filter bills created before this date (YYYY-MM-DD format)",
+        description:
+          "Filter bills created on or after this date (ISO 8601 format, e.g. 2025-01-01)",
+      },
+      createdBefore: {
+        type: "string",
+        description:
+          "Filter bills created on or before this date (ISO 8601 format, e.g. 2025-12-31)",
+      },
+      dueDateAfter: {
+        type: "string",
+        description:
+          "Filter bills with due date on or after this date (ISO 8601 format)",
+      },
+      dueDateBefore: {
+        type: "string",
+        description:
+          "Filter bills with due date on or before this date (ISO 8601 format)",
       },
     },
     required: [],
@@ -47,41 +70,36 @@ export const listBills: Tool = {
   handler: async (args: any, client: BillClient) => {
     const {
       limit,
-      offset,
-      status,
+      page,
+      sort,
+      paymentStatus,
       vendorId,
-      startDate,
-      endDate,
+      archived,
+      createdAfter,
+      createdBefore,
+      dueDateAfter,
+      dueDateBefore,
     } = args;
 
     try {
-      const params: Record<string, any> = {};
+      const filters: FilterClause[] = [];
+      if (paymentStatus)
+        filters.push({ field: "paymentStatus", op: "eq", value: paymentStatus });
+      if (vendorId)
+        filters.push({ field: "vendorId", op: "eq", value: vendorId });
+      if (archived !== undefined)
+        filters.push({ field: "archived", op: "eq", value: archived });
+      if (createdAfter)
+        filters.push({ field: "createdTime", op: "gte", value: createdAfter });
+      if (createdBefore)
+        filters.push({ field: "createdTime", op: "lte", value: createdBefore });
+      if (dueDateAfter)
+        filters.push({ field: "dueDate", op: "gte", value: dueDateAfter });
+      if (dueDateBefore)
+        filters.push({ field: "dueDate", op: "lte", value: dueDateBefore });
 
-      if (limit !== undefined) {
-        params.max = limit;
-      }
-
-      if (offset !== undefined) {
-        params.offset = offset;
-      }
-
-      if (status) {
-        params.status = status;
-      }
-
-      if (vendorId) {
-        params.vendorId = vendorId;
-      }
-
-      if (startDate) {
-        params.startDate = startDate;
-      }
-
-      if (endDate) {
-        params.endDate = endDate;
-      }
-
-      const bills = await client.get("/bills", Object.keys(params).length > 0 ? params : undefined);
+      const params = buildListParams({ max: limit, page, sort, filters });
+      const bills = await client.get("/bills", params);
 
       return {
         success: true,

@@ -15,10 +15,16 @@ export interface BillConfig {
   environment: "sandbox" | "production";
 }
 
-export interface BillApiError {
-  error: string;
-  message: string;
-  status: number;
+export class BillApiError extends Error {
+  public readonly errorType: string;
+  public readonly status: number;
+
+  constructor(message: string, status: number, errorType: string) {
+    super(message);
+    this.name = "BillApiError";
+    this.errorType = errorType;
+    this.status = status;
+  }
 }
 
 /**
@@ -90,7 +96,8 @@ export class BillClient {
       console.error("[Bill.com API] Login successful, sessionId:", this.sessionId);
     } catch (error) {
       console.error("[Bill.com API] Login failed:", error);
-      throw new Error("Failed to login to Bill.com API");
+      const detail = error instanceof Error ? error.message : String(error);
+      throw new Error(`Failed to login to Bill.com API: ${detail}`);
     }
   }
 
@@ -130,33 +137,30 @@ export class BillClient {
     });
 
     if (error.response) {
-      // The request was made and the server responded with a status code
-      // that falls out of the range of 2xx
       const errorData = error.response.data as any;
-      return {
-        error: "api_error",
-        message:
-          errorData?.message ||
-          errorData?.error ||
-          JSON.stringify(errorData) ||
-          error.message ||
-          "Unknown API error",
-        status: error.response.status,
-      };
+      const detail =
+        errorData?.message ||
+        errorData?.error ||
+        JSON.stringify(errorData) ||
+        error.message ||
+        "Unknown API error";
+      return new BillApiError(
+        `Bill.com API error (${error.response.status}): ${detail}`,
+        error.response.status,
+        "api_error"
+      );
     } else if (error.request) {
-      // The request was made but no response was received
-      return {
-        error: "network_error",
-        message: "No response received from Bill.com API",
-        status: 0,
-      };
+      return new BillApiError(
+        "No response received from Bill.com API",
+        0,
+        "network_error"
+      );
     } else {
-      // Something happened in setting up the request
-      return {
-        error: "client_error",
-        message: error.message || "Unknown client error",
-        status: 0,
-      };
+      return new BillApiError(
+        error.message || "Unknown client error",
+        0,
+        "client_error"
+      );
     }
   }
 

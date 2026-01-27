@@ -17,41 +17,44 @@ describe("listVendors tool", () => {
 
   it("should have correct metadata", () => {
     expect(listVendors.name).toBe("list_vendors");
-    expect(listVendors.description).toContain("List all vendors");
+    expect(listVendors.description).toContain("List vendors");
     expect(listVendors.inputSchema.type).toBe("object");
   });
 
-  it("should call API with default parameters", async () => {
+  it("should call API with default sort and max", async () => {
     const mockData = { vendors: [] };
     vi.mocked(mockClient.get).mockResolvedValue(mockData);
 
     const result = await listVendors.handler({}, mockClient);
 
-    expect(mockClient.get).toHaveBeenCalledWith("/vendors", undefined);
+    expect(mockClient.get).toHaveBeenCalledWith("/vendors", {
+      max: 50,
+      sort: "createdTime:desc",
+    });
     expect(result).toEqual({
       success: true,
       data: mockData,
     });
   });
 
-  it("should call API with custom parameters", async () => {
+  it("should build filters for name, archived, and date range", async () => {
     const mockData = { vendors: [{ id: "1", name: "Test Vendor" }] };
     vi.mocked(mockClient.get).mockResolvedValue(mockData);
 
     const args = {
       limit: 10,
-      offset: 20,
       name: "Test",
-      isActive: true,
+      archived: false,
+      createdAfter: "2025-01-01",
     };
 
     const result = await listVendors.handler(args, mockClient);
 
     expect(mockClient.get).toHaveBeenCalledWith("/vendors", {
       max: 10,
-      offset: 20,
-      name: "Test",
-      isActive: true,
+      sort: "createdTime:desc",
+      filters:
+        'name:sw:"Test",archived:eq:false,createdTime:gte:"2025-01-01"',
     });
     expect(result).toEqual({
       success: true,
@@ -71,25 +74,45 @@ describe("listVendors tool", () => {
     });
   });
 
-  it("should filter by name only", async () => {
+  it("should filter by name using starts-with operator", async () => {
     const mockData = { vendors: [] };
     vi.mocked(mockClient.get).mockResolvedValue(mockData);
 
-    const result = await listVendors.handler({ name: "Acme" }, mockClient);
+    await listVendors.handler({ name: "Acme" }, mockClient);
 
     expect(mockClient.get).toHaveBeenCalledWith("/vendors", {
-      name: "Acme",
+      max: 50,
+      sort: "createdTime:desc",
+      filters: 'name:sw:"Acme"',
     });
   });
 
-  it("should filter by active status only", async () => {
+  it("should filter by archived status", async () => {
     const mockData = { vendors: [] };
     vi.mocked(mockClient.get).mockResolvedValue(mockData);
 
-    const result = await listVendors.handler({ isActive: false }, mockClient);
+    await listVendors.handler({ archived: true }, mockClient);
 
     expect(mockClient.get).toHaveBeenCalledWith("/vendors", {
-      isActive: false,
+      max: 50,
+      sort: "createdTime:desc",
+      filters: "archived:eq:true",
+    });
+  });
+
+  it("should pass page cursor and custom sort", async () => {
+    const mockData = { vendors: [] };
+    vi.mocked(mockClient.get).mockResolvedValue(mockData);
+
+    await listVendors.handler(
+      { page: "next-cursor", sort: "name:asc" },
+      mockClient
+    );
+
+    expect(mockClient.get).toHaveBeenCalledWith("/vendors", {
+      max: 50,
+      sort: "name:asc",
+      page: "next-cursor",
     });
   });
 });
