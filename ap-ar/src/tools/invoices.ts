@@ -222,7 +222,8 @@ export const sendInvoice: Tool = {
       },
       replyToUserId: {
         type: "string",
-        description: "User ID for the reply-to address",
+        description:
+          "Optional Bill.com AP/AR user ID for the reply-to address (starts with '00U'). Omit to use the default.",
       },
     },
     required: ["id", "recipientEmails"],

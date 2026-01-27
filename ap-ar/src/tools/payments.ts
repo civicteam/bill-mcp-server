@@ -166,7 +166,8 @@ export const createPayment: Tool = {
       },
       fundingAccountId: {
         type: "string",
-        description: "The bank account ID to fund the payment from",
+        description:
+          "The bank account ID to fund the payment from. Use list_bank_accounts to find available accounts.",
       },
       fundingAccountType: {
         type: "string",
