@@ -157,7 +157,7 @@ export const createBill: Tool = {
     properties: {
       vendorId: {
         type: "string",
-        description: "The vendor ID",
+        description: "The vendor ID (starts with '009')",
       },
       invoiceNumber: {
         type: "string",
@@ -171,7 +171,7 @@ export const createBill: Tool = {
         type: "string",
         description: "Payment due date (YYYY-MM-DD format)",
       },
-      lineItems: {
+      billLineItems: {
         type: "array",
         description: "Bill line items",
         items: {
@@ -185,13 +185,14 @@ export const createBill: Tool = {
               type: "number",
               description: "Quantity",
             },
-            unitPrice: {
+            price: {
               type: "number",
               description: "Unit price",
             },
             amount: {
               type: "number",
-              description: "Line total amount",
+              description:
+                "Line total amount. Can be set directly or calculated from quantity * price.",
             },
             chartOfAccountId: {
               type: "string",
@@ -206,11 +207,22 @@ export const createBill: Tool = {
         description: "Bill description or memo",
       },
     },
-    required: ["vendorId", "invoiceDate", "dueDate", "lineItems"],
+    required: ["vendorId", "dueDate", "billLineItems"],
   },
   handler: async (args: any, client: BillClient) => {
     try {
-      const bill = await client.post("/bills", args);
+      const { invoiceNumber, invoiceDate, ...rest } = args;
+
+      // The API expects invoice details nested under an "invoice" object
+      const body: Record<string, unknown> = { ...rest };
+      if (invoiceNumber || invoiceDate) {
+        body.invoice = {
+          ...(invoiceNumber && { invoiceNumber }),
+          ...(invoiceDate && { invoiceDate }),
+        };
+      }
+
+      const bill = await client.post("/bills", body);
       return {
         success: true,
         data: bill,
@@ -249,7 +261,7 @@ export const updateBill: Tool = {
         type: "string",
         description: "Payment due date (YYYY-MM-DD format)",
       },
-      lineItems: {
+      billLineItems: {
         type: "array",
         description: "Bill line items",
         items: {
@@ -263,13 +275,14 @@ export const updateBill: Tool = {
               type: "number",
               description: "Quantity",
             },
-            unitPrice: {
+            price: {
               type: "number",
               description: "Unit price",
             },
             amount: {
               type: "number",
-              description: "Line total amount",
+              description:
+                "Line total amount. Can be set directly or calculated from quantity * price.",
             },
             chartOfAccountId: {
               type: "string",
@@ -288,8 +301,17 @@ export const updateBill: Tool = {
   },
   handler: async (args: any, client: BillClient) => {
     try {
-      const { id, ...updateData } = args;
-      const bill = await client.patch(`/bills/${id}`, updateData);
+      const { id, invoiceNumber, invoiceDate, ...rest } = args;
+
+      const body: Record<string, unknown> = { ...rest };
+      if (invoiceNumber || invoiceDate) {
+        body.invoice = {
+          ...(invoiceNumber && { invoiceNumber }),
+          ...(invoiceDate && { invoiceDate }),
+        };
+      }
+
+      const bill = await client.patch(`/bills/${id}`, body);
       return {
         success: true,
         data: bill,

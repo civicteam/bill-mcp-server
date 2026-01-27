@@ -40,7 +40,7 @@ export const listBankAccounts: Tool = {
 
     try {
       const params = buildListParams({ max: limit, page, sort });
-      const bankAccounts = await client.get("/bank-accounts", params);
+      const bankAccounts = await client.get("/funding-accounts/banks", params);
 
       return {
         success: true,
@@ -73,7 +73,7 @@ export const getBankAccount: Tool = {
   },
   handler: async (args: any, client: BillClient) => {
     try {
-      const bankAccount = await client.get(`/bank-accounts/${args.id}`);
+      const bankAccount = await client.get(`/funding-accounts/banks/${args.id}`);
       return {
         success: true,
         data: bankAccount,

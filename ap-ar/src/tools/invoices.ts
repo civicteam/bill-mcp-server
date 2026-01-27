@@ -127,7 +127,7 @@ export const createInvoice: Tool = {
     properties: {
       customerId: {
         type: "string",
-        description: "The customer ID",
+        description: "The customer ID (starts with '0cu')",
       },
       invoiceNumber: {
         type: "string",
@@ -135,13 +135,14 @@ export const createInvoice: Tool = {
       },
       invoiceDate: {
         type: "string",
-        description: "Invoice date (YYYY-MM-DD format)",
+        description:
+          "Invoice date (YYYY-MM-DD format). Defaults to today if omitted.",
       },
       dueDate: {
         type: "string",
         description: "Payment due date (YYYY-MM-DD format)",
       },
-      lineItems: {
+      invoiceLineItems: {
         type: "array",
         description: "Invoice line items",
         items: {
@@ -155,16 +156,12 @@ export const createInvoice: Tool = {
               type: "number",
               description: "Quantity",
             },
-            unitPrice: {
+            price: {
               type: "number",
               description: "Unit price",
             },
-            amount: {
-              type: "number",
-              description: "Line total amount",
-            },
           },
-          required: ["description", "amount"],
+          required: ["description", "quantity", "price"],
         },
       },
       description: {
@@ -172,11 +169,19 @@ export const createInvoice: Tool = {
         description: "Invoice description or memo",
       },
     },
-    required: ["customerId", "invoiceDate", "dueDate", "lineItems"],
+    required: ["customerId", "dueDate", "invoiceLineItems"],
   },
   handler: async (args: any, client: BillClient) => {
     try {
-      const invoice = await client.post("/invoices", args);
+      const { customerId, ...rest } = args;
+
+      // The API expects customer as a nested object with an id field
+      const body: Record<string, unknown> = {
+        ...rest,
+        customer: { id: customerId },
+      };
+
+      const invoice = await client.post("/invoices", body);
       return {
         success: true,
         data: invoice,
