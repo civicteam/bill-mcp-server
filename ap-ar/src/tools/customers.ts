@@ -158,7 +158,7 @@ export const createCustomer: Tool = {
             type: "string",
             description: "State/Province",
           },
-          zip: {
+          zipOrPostalCode: {
             type: "string",
             description: "ZIP/Postal code",
           },

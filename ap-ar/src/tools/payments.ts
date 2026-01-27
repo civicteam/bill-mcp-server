@@ -144,13 +144,17 @@ export const getPayment: Tool = {
  */
 export const createPayment: Tool = {
   name: "create_payment",
-  description: "Create a new payment for a vendor",
+  description: "Create a new payment for a vendor. Requires a funding account and processing options.",
   inputSchema: {
     type: "object",
     properties: {
       vendorId: {
         type: "string",
         description: "The vendor ID to pay",
+      },
+      billId: {
+        type: "string",
+        description: "The bill ID to pay (starts with '00n'). Not required if createBill is true.",
       },
       amount: {
         type: "number",
@@ -160,23 +164,55 @@ export const createPayment: Tool = {
         type: "string",
         description: "Date to process the payment (YYYY-MM-DD format)",
       },
+      fundingAccountId: {
+        type: "string",
+        description: "The bank account ID to fund the payment from",
+      },
+      fundingAccountType: {
+        type: "string",
+        description: "Type of funding account (default: BANK_ACCOUNT)",
+        default: "BANK_ACCOUNT",
+      },
+      createBill: {
+        type: "boolean",
+        description: "Whether to create a new bill for this payment (default: false)",
+        default: false,
+      },
+      requestPayFaster: {
+        type: "boolean",
+        description: "Whether to request faster ACH payment (default: false)",
+        default: false,
+      },
       description: {
         type: "string",
         description: "Payment description or memo",
       },
-      billIds: {
-        type: "array",
-        description: "Array of bill IDs to pay",
-        items: {
-          type: "string",
-        },
-      },
     },
-    required: ["vendorId", "amount", "processDate"],
+    required: ["vendorId", "amount", "processDate", "fundingAccountId"],
   },
   handler: async (args: any, client: BillClient) => {
     try {
-      const payment = await client.post("/payments", args);
+      const {
+        fundingAccountId,
+        fundingAccountType,
+        createBill,
+        requestPayFaster,
+        ...rest
+      } = args;
+
+      const body: Record<string, unknown> = {
+        ...rest,
+        fundingAccount: {
+          type: fundingAccountType || "BANK_ACCOUNT",
+          id: fundingAccountId,
+        },
+        processingOptions: {
+          createBill: createBill || false,
+          requestPayFaster: requestPayFaster || false,
+        },
+      };
+
+      const payment = await client.post("/payments", body);
       return {
         success: true,
         data: payment,

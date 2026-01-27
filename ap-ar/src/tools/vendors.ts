@@ -158,7 +158,7 @@ export const createVendor: Tool = {
             type: "string",
             description: "State/Province",
           },
-          zip: {
+          zipOrPostalCode: {
             type: "string",
             description: "ZIP/Postal code",
           },
@@ -240,7 +240,7 @@ export const updateVendor: Tool = {
             type: "string",
             description: "State/Province",
           },
-          zip: {
+          zipOrPostalCode: {
             type: "string",
             description: "ZIP/Postal code",
           },

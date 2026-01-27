@@ -211,20 +211,32 @@ export const sendInvoice: Tool = {
     properties: {
       id: {
         type: "string",
-        description: "The invoice ID to send",
+        description: "The invoice ID to send (starts with '00e')",
       },
-      emailMessage: {
+      recipientEmails: {
+        type: "array",
+        description: "Email addresses to send the invoice to",
+        items: {
+          type: "string",
+        },
+      },
+      replyToUserId: {
         type: "string",
-        description: "Optional custom email message",
+        description: "User ID for the reply-to address",
       },
     },
-    required: ["id"],
+    required: ["id", "recipientEmails"],
   },
   handler: async (args: any, client: BillClient) => {
     try {
-      const { id, emailMessage, ...rest } = args;
-      const payload = emailMessage ? { emailMessage, ...rest } : rest;
-      const result = await client.post(`/invoices/${id}/send`, payload);
+      const { id, recipientEmails, replyToUserId } = args;
+      const payload: Record<string, unknown> = {
+        recipient: { to: recipientEmails },
+      };
+      if (replyToUserId) {
+        payload.replyTo = { userId: replyToUserId };
+      }
+      const result = await client.post(`/invoices/${id}/email`, payload);
       return {
         success: true,
         data: result,
