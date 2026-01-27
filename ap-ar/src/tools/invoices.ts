@@ -173,11 +173,16 @@ export const createInvoice: Tool = {
   },
   handler: async (args: any, client: BillClient) => {
     try {
-      const { customerId, ...rest } = args;
+      const { customerId, invoiceLineItems, ...rest } = args;
+
+      // Parse invoiceLineItems if it arrives as a JSON string (MCP transport serialization)
+      const parsedLineItems =
+        typeof invoiceLineItems === "string" ? JSON.parse(invoiceLineItems) : invoiceLineItems;
 
       // The API expects customer as a nested object with an id field
       const body: Record<string, unknown> = {
         ...rest,
+        invoiceLineItems: parsedLineItems,
         customer: { id: customerId },
       };
 

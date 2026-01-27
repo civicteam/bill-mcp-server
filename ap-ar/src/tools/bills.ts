@@ -211,10 +211,17 @@ export const createBill: Tool = {
   },
   handler: async (args: any, client: BillClient) => {
     try {
-      const { invoiceNumber, invoiceDate, ...rest } = args;
+      const { invoiceNumber, invoiceDate, billLineItems, ...rest } = args;
 
-      // The API expects invoice details nested under an "invoice" object
-      const body: Record<string, unknown> = { ...rest };
+      // Parse billLineItems if it arrives as a JSON string (MCP transport serialization)
+      const parsedLineItems =
+        typeof billLineItems === "string" ? JSON.parse(billLineItems) : billLineItems;
+
+      // Nest invoice fields for the API
+      const body: Record<string, unknown> = {
+        ...rest,
+        billLineItems: parsedLineItems,
+      };
       if (invoiceNumber || invoiceDate) {
         body.invoice = {
           ...(invoiceNumber && { invoiceNumber }),
@@ -301,9 +308,13 @@ export const updateBill: Tool = {
   },
   handler: async (args: any, client: BillClient) => {
     try {
-      const { id, invoiceNumber, invoiceDate, ...rest } = args;
+      const { id, invoiceNumber, invoiceDate, billLineItems, ...rest } = args;
 
       const body: Record<string, unknown> = { ...rest };
+      if (billLineItems) {
+        body.billLineItems =
+          typeof billLineItems === "string" ? JSON.parse(billLineItems) : billLineItems;
+      }
       if (invoiceNumber || invoiceDate) {
         body.invoice = {
           ...(invoiceNumber && { invoiceNumber }),
