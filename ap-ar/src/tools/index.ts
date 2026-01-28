@@ -11,6 +11,29 @@ import { listPayments, getPayment, createPayment, cancelPayment } from "./paymen
 import { listInvoices, getInvoice, createInvoice, sendInvoice } from "./invoices.js";
 import { listCustomers, getCustomer, createCustomer } from "./customers.js";
 import { listBankAccounts, getBankAccount } from "./bank-accounts.js";
+import {
+  listChartOfAccounts,
+  getChartOfAccount,
+  createChartOfAccount,
+  updateChartOfAccount,
+  archiveChartOfAccount,
+  restoreChartOfAccount,
+} from "./chart-of-accounts.js";
+import {
+  listVendorCredits,
+  getVendorCredit,
+  createVendorCredit,
+  updateVendorCredit,
+  archiveVendorCredit,
+} from "./vendor-credits.js";
+import {
+  listBillApprovalPolicies,
+  createBillApprovalPolicy,
+  updateBillApprovalPolicy,
+  deleteBillApprovalPolicy,
+  listPendingBillApprovals,
+  approveDenyBill,
+} from "./bill-approvals.js";
 
 export interface Tool {
   name: string;
@@ -54,4 +77,24 @@ export const tools: Tool[] = [
   // Bank Accounts
   listBankAccounts,
   getBankAccount,
+  // Chart of Accounts (GL)
+  listChartOfAccounts,
+  getChartOfAccount,
+  createChartOfAccount,
+  updateChartOfAccount,
+  archiveChartOfAccount,
+  restoreChartOfAccount,
+  // Vendor Credits (AP)
+  listVendorCredits,
+  getVendorCredit,
+  createVendorCredit,
+  updateVendorCredit,
+  archiveVendorCredit,
+  // Bill Approvals (AP)
+  listBillApprovalPolicies,
+  createBillApprovalPolicy,
+  updateBillApprovalPolicy,
+  deleteBillApprovalPolicy,
+  listPendingBillApprovals,
+  approveDenyBill,
 ];
