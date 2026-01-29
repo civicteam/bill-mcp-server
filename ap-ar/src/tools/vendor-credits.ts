@@ -136,7 +136,7 @@ export const createVendorCredit: Tool = {
         description:
           "Date of the credit (YYYY-MM-DD format). Defaults to today if omitted.",
       },
-      creditNumber: {
+      referenceNumber: {
         type: "string",
         description: "Vendor credit reference number",
       },
@@ -217,7 +217,7 @@ export const updateVendorCredit: Tool = {
         type: "string",
         description: "Date of the credit (YYYY-MM-DD format)",
       },
-      creditNumber: {
+      referenceNumber: {
         type: "string",
         description: "Vendor credit reference number",
       },

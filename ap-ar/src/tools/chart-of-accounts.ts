@@ -149,9 +149,20 @@ export const createChartOfAccount: Tool = {
   },
   handler: async (args: any, client: BillClient) => {
     try {
+      const { accountType, accountNumber, ...rest } = args;
+
+      // API expects nested account object with type and number
+      const body: Record<string, unknown> = {
+        ...rest,
+        account: {
+          type: accountType,
+          ...(accountNumber && { number: accountNumber }),
+        },
+      };
+
       const account = await client.post(
         "/classifications/chart-of-accounts",
-        args
+        body
       );
       return {
         success: true,
