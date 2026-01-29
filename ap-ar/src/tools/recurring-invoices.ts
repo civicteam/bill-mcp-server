@@ -156,15 +156,13 @@ export const createRecurringInvoice: Tool = {
           : recurringInvoiceLineItems;
 
       // API expects nested customer and schedule objects
+      // Field mappings: timePeriod -> period, frequencyPerTimePeriod -> frequency
       const schedule: Record<string, unknown> = {
-        timePeriod,
+        period: timePeriod,
         nextDueDate,
-        frequencyPerTimePeriod: frequencyPerTimePeriod ?? 1,
+        frequency: frequencyPerTimePeriod ?? 1,
+        daysInAdvance: daysInAdvance ?? 0,
       };
-
-      if (daysInAdvance !== undefined) {
-        schedule.daysInAdvance = daysInAdvance;
-      }
 
       // API requires both customerId at top level and customer object
       const body: Record<string, unknown> = {
