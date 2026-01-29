@@ -8,8 +8,8 @@ import { BillClient } from "../bill-client.js";
 import { listVendors, getVendor, createVendor, updateVendor } from "./vendors.js";
 import { listBills, getBill, createBill, updateBill } from "./bills.js";
 import { listPayments, getPayment, createPayment, cancelPayment } from "./payments.js";
-import { listInvoices, getInvoice, createInvoice, sendInvoice } from "./invoices.js";
-import { listCustomers, getCustomer, createCustomer } from "./customers.js";
+import { listInvoices, getInvoice, createInvoice, sendInvoice, recordArPayment } from "./invoices.js";
+import { listCustomers, getCustomer, createCustomer, updateCustomer } from "./customers.js";
 import { listBankAccounts, getBankAccount } from "./bank-accounts.js";
 import {
   listChartOfAccounts,
@@ -32,8 +32,34 @@ import {
   updateBillApprovalPolicy,
   deleteBillApprovalPolicy,
   listPendingBillApprovals,
-  approveDenyBill,
 } from "./bill-approvals.js";
+import {
+  listRecurringBills,
+  getRecurringBill,
+  createRecurringBill,
+  updateRecurringBill,
+} from "./recurring-bills.js";
+import {
+  listRecurringInvoices,
+  getRecurringInvoice,
+  createRecurringInvoice,
+  updateRecurringInvoice,
+} from "./recurring-invoices.js";
+import {
+  listCreditMemos,
+  getCreditMemo,
+  createCreditMemo,
+} from "./credit-memos.js";
+import { listDocuments, getDocument } from "./documents.js";
+import { listUsers, getUser } from "./users.js";
+import {
+  listDepartments,
+  listLocations,
+  listJobs,
+  listEmployees,
+  listItems,
+  listAccountingClasses,
+} from "./classifications.js";
 
 export interface Tool {
   name: string;
@@ -60,6 +86,11 @@ export const tools: Tool[] = [
   getBill,
   createBill,
   updateBill,
+  // Recurring Bills (AP)
+  listRecurringBills,
+  getRecurringBill,
+  createRecurringBill,
+  updateRecurringBill,
   // Payments (AP)
   listPayments,
   getPayment,
@@ -69,11 +100,22 @@ export const tools: Tool[] = [
   listCustomers,
   getCustomer,
   createCustomer,
+  updateCustomer,
   // Invoices (AR)
   listInvoices,
   getInvoice,
   createInvoice,
   sendInvoice,
+  recordArPayment,
+  // Recurring Invoices (AR)
+  listRecurringInvoices,
+  getRecurringInvoice,
+  createRecurringInvoice,
+  updateRecurringInvoice,
+  // Credit Memos (AR)
+  listCreditMemos,
+  getCreditMemo,
+  createCreditMemo,
   // Bank Accounts
   listBankAccounts,
   getBankAccount,
@@ -84,6 +126,13 @@ export const tools: Tool[] = [
   updateChartOfAccount,
   archiveChartOfAccount,
   restoreChartOfAccount,
+  // Classifications (GL)
+  listDepartments,
+  listLocations,
+  listJobs,
+  listEmployees,
+  listItems,
+  listAccountingClasses,
   // Vendor Credits (AP)
   listVendorCredits,
   getVendorCredit,
@@ -96,5 +145,10 @@ export const tools: Tool[] = [
   updateBillApprovalPolicy,
   deleteBillApprovalPolicy,
   listPendingBillApprovals,
-  approveDenyBill,
+  // Documents
+  listDocuments,
+  getDocument,
+  // Users
+  listUsers,
+  getUser,
 ];

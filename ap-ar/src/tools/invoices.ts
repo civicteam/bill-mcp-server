@@ -250,3 +250,63 @@ export const sendInvoice: Tool = {
     }
   },
 };
+
+/**
+ * Record AR payment
+ */
+export const recordArPayment: Tool = {
+  name: "record_ar_payment",
+  description:
+    "Record a payment received from a customer for an invoice. Use this to track payments received outside of Bill.com.",
+  inputSchema: {
+    type: "object",
+    properties: {
+      invoiceId: {
+        type: "string",
+        description: "The invoice ID being paid (starts with '00e')",
+      },
+      amount: {
+        type: "number",
+        description: "Payment amount received",
+      },
+      paymentDate: {
+        type: "string",
+        description: "Date payment was received (YYYY-MM-DD format)",
+      },
+      paymentMethod: {
+        type: "string",
+        description: "Payment method (e.g., 'CHECK', 'CASH', 'CREDIT_CARD', 'ACH', 'OTHER')",
+      },
+      referenceNumber: {
+        type: "string",
+        description: "Reference number (e.g., check number)",
+      },
+      description: {
+        type: "string",
+        description: "Payment description or memo",
+      },
+    },
+    required: ["invoiceId", "amount", "paymentDate"],
+  },
+  handler: async (args: any, client: BillClient) => {
+    try {
+      const { invoiceId, ...paymentData } = args;
+
+      const body: Record<string, unknown> = {
+        ...paymentData,
+        invoice: { id: invoiceId },
+      };
+
+      const payment = await client.post("/invoices/record-payment", body);
+      return {
+        success: true,
+        data: payment,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
+    }
+  },
+};

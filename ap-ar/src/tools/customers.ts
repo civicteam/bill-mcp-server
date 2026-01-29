@@ -190,3 +190,82 @@ export const createCustomer: Tool = {
     }
   },
 };
+
+/**
+ * Update customer
+ */
+export const updateCustomer: Tool = {
+  name: "update_customer",
+  description: "Update an existing customer in Bill.com",
+  inputSchema: {
+    type: "object",
+    properties: {
+      id: {
+        type: "string",
+        description: "The customer ID to update (starts with '0cu')",
+      },
+      name: {
+        type: "string",
+        description: "Customer name",
+      },
+      email: {
+        type: "string",
+        description: "Customer email address",
+      },
+      phone: {
+        type: "string",
+        description: "Customer phone number",
+      },
+      address: {
+        type: "object",
+        description: "Customer address",
+        properties: {
+          line1: {
+            type: "string",
+            description: "Address line 1",
+          },
+          line2: {
+            type: "string",
+            description: "Address line 2",
+          },
+          city: {
+            type: "string",
+            description: "City",
+          },
+          state: {
+            type: "string",
+            description: "State/Province",
+          },
+          zipOrPostalCode: {
+            type: "string",
+            description: "ZIP/Postal code",
+          },
+          country: {
+            type: "string",
+            description: "Country code (e.g., US)",
+          },
+        },
+      },
+      taxId: {
+        type: "string",
+        description: "Tax ID or EIN",
+      },
+    },
+    required: ["id"],
+  },
+  handler: async (args: any, client: BillClient) => {
+    try {
+      const { id, ...updateData } = args;
+      const customer = await client.patch(`/customers/${id}`, updateData);
+      return {
+        success: true,
+        data: customer,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
+    }
+  },
+};
