@@ -155,20 +155,23 @@ export const createRecurringInvoice: Tool = {
           ? JSON.parse(recurringInvoiceLineItems)
           : recurringInvoiceLineItems;
 
-      // API expects customerId as top-level and schedule fields nested
-      const body: Record<string, unknown> = {
-        customerId,
-        recurringInvoiceLineItems: parsedLineItems,
-        schedule: {
-          timePeriod,
-          nextDueDate,
-          frequencyPerTimePeriod: frequencyPerTimePeriod ?? 1,
-        },
+      // API expects nested customer and schedule objects
+      const schedule: Record<string, unknown> = {
+        timePeriod,
+        nextDueDate,
+        frequencyPerTimePeriod: frequencyPerTimePeriod ?? 1,
       };
 
       if (daysInAdvance !== undefined) {
-        (body.schedule as Record<string, unknown>).daysInAdvance = daysInAdvance;
+        schedule.daysInAdvance = daysInAdvance;
       }
+
+      const body: Record<string, unknown> = {
+        customer: { id: customerId },
+        schedule,
+        recurringInvoiceLineItems: parsedLineItems,
+      };
+
       if (description) {
         body.description = description;
       }
