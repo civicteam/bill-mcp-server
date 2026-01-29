@@ -34,12 +34,6 @@ import {
   listPendingBillApprovals,
 } from "./bill-approvals.js";
 import {
-  listRecurringBills,
-  getRecurringBill,
-  createRecurringBill,
-  updateRecurringBill,
-} from "./recurring-bills.js";
-import {
   listRecurringInvoices,
   getRecurringInvoice,
   createRecurringInvoice,
@@ -50,7 +44,6 @@ import {
   getCreditMemo,
   createCreditMemo,
 } from "./credit-memos.js";
-import { listDocuments, getDocument } from "./documents.js";
 import { listUsers, getUser } from "./users.js";
 import {
   listDepartments,
@@ -86,11 +79,6 @@ export const tools: Tool[] = [
   getBill,
   createBill,
   updateBill,
-  // Recurring Bills (AP)
-  listRecurringBills,
-  getRecurringBill,
-  createRecurringBill,
-  updateRecurringBill,
   // Payments (AP)
   listPayments,
   getPayment,
@@ -145,9 +133,6 @@ export const tools: Tool[] = [
   updateBillApprovalPolicy,
   deleteBillApprovalPolicy,
   listPendingBillApprovals,
-  // Documents
-  listDocuments,
-  getDocument,
   // Users
   listUsers,
   getUser,

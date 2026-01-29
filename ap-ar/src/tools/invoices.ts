@@ -275,7 +275,8 @@ export const recordArPayment: Tool = {
       },
       paymentMethod: {
         type: "string",
-        description: "Payment method (e.g., 'CHECK', 'CASH', 'CREDIT_CARD', 'ACH', 'OTHER')",
+        description:
+          "Payment method (e.g., 'CHECK', 'CASH', 'CREDIT_CARD', 'ACH', 'OTHER')",
       },
       referenceNumber: {
         type: "string",
@@ -290,14 +291,31 @@ export const recordArPayment: Tool = {
   },
   handler: async (args: any, client: BillClient) => {
     try {
-      const { invoiceId, ...paymentData } = args;
+      const { invoiceId, amount, paymentDate, paymentMethod, referenceNumber, description } =
+        args;
 
+      // Build the request body with proper API field mappings
       const body: Record<string, unknown> = {
-        ...paymentData,
-        invoice: { id: invoiceId },
+        invoices: [
+          {
+            invoiceId,
+            amount,
+          },
+        ],
+        processDate: paymentDate,
       };
 
-      const payment = await client.post("/invoices/record-payment", body);
+      if (paymentMethod) {
+        body.paymentType = paymentMethod;
+      }
+      if (referenceNumber) {
+        body.referenceNumber = referenceNumber;
+      }
+      if (description) {
+        body.description = description;
+      }
+
+      const payment = await client.post("/received-payments", body);
       return {
         success: true,
         data: payment,

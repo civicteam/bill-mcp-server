@@ -116,9 +116,10 @@ export const createCreditMemo: Tool = {
       },
       creditMemoDate: {
         type: "string",
-        description: "Date of the credit memo (YYYY-MM-DD format). Defaults to today if omitted.",
+        description:
+          "Date of the credit memo (YYYY-MM-DD format). Defaults to today if omitted.",
       },
-      creditMemoNumber: {
+      referenceNumber: {
         type: "string",
         description: "Credit memo reference number",
       },
@@ -153,7 +154,13 @@ export const createCreditMemo: Tool = {
   },
   handler: async (args: any, client: BillClient) => {
     try {
-      const { customerId, creditMemoLineItems, ...rest } = args;
+      const {
+        customerId,
+        creditMemoDate,
+        referenceNumber,
+        creditMemoLineItems,
+        description,
+      } = args;
 
       const parsedLineItems =
         typeof creditMemoLineItems === "string"
@@ -161,10 +168,20 @@ export const createCreditMemo: Tool = {
           : creditMemoLineItems;
 
       const body: Record<string, unknown> = {
-        ...rest,
-        creditMemoLineItems: parsedLineItems,
         customer: { id: customerId },
+        creditMemoLineItems: parsedLineItems,
       };
+
+      // Map creditMemoDate to API's expected creditDate field
+      if (creditMemoDate) {
+        body.creditDate = creditMemoDate;
+      }
+      if (referenceNumber) {
+        body.referenceNumber = referenceNumber;
+      }
+      if (description) {
+        body.description = description;
+      }
 
       const creditMemo = await client.post("/credit-memos", body);
       return {

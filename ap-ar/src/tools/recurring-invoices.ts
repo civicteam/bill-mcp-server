@@ -53,7 +53,18 @@ export const listRecurringInvoices: Tool = {
       if (isActive !== undefined)
         filters.push({ field: "isActive", op: "eq", value: isActive });
 
-      const params = buildListParams({ max: limit, page, sort, filters });
+      // Don't apply default sort - createdTime not supported for this endpoint
+      const params: Record<string, string | number> = { max: limit ?? 50 };
+      if (page) params.page = page;
+      if (sort) params.sort = sort;
+      if (filters.length > 0) {
+        params.filters = filters
+          .map((c) => {
+            const v = typeof c.value === "string" ? `"${c.value}"` : String(c.value);
+            return `${c.field}:${c.op}:${v}`;
+          })
+          .join(",");
+      }
       const recurringInvoices = await client.get("/recurring-invoices", params);
 
       return {
