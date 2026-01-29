@@ -172,7 +172,7 @@ export const createVendorCredit: Tool = {
   },
   handler: async (args: any, client: BillClient) => {
     try {
-      const { vendorId, vendorCreditLineItems, ...rest } = args;
+      const { vendorCreditLineItems, ...rest } = args;
 
       // Parse vendorCreditLineItems if it arrives as a JSON string
       const parsedLineItems =
@@ -180,10 +180,10 @@ export const createVendorCredit: Tool = {
           ? JSON.parse(vendorCreditLineItems)
           : vendorCreditLineItems;
 
+      // vendorId is passed directly at the top level, not nested
       const body: Record<string, unknown> = {
         ...rest,
         vendorCreditLineItems: parsedLineItems,
-        vendor: { id: vendorId },
       };
 
       const credit = await client.post("/vendor-credits", body);

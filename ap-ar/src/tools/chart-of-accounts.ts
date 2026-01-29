@@ -30,7 +30,7 @@ export const listChartOfAccounts: Tool = {
       sort: {
         type: "string",
         description:
-          "Sort order in 'field:direction' format. Sortable fields: name, accountNumber, createdTime, updatedTime. Default: 'createdTime:desc'.",
+          "Sort order in 'field:direction' format. Sortable fields: accountNumber, createdTime, updatedTime. Default: 'createdTime:desc'.",
       },
       name: {
         type: "string",
@@ -38,9 +38,9 @@ export const listChartOfAccounts: Tool = {
           "Filter accounts whose name starts with this value (uses starts-with matching)",
       },
       accountType: {
-        type: "string",
+        type: "number",
         description:
-          "Filter by account type (e.g., EXPENSE, INCOME, ASSET, LIABILITY, EQUITY)",
+          "Filter by account type (numeric enum): 0=Unspecified, 1=Accounts Payable, 2=Accounts Receivable, 3=Bank, 4=Cost of Goods Sold, 5=Credit Card, 6=Equity, 7=Expense, 8=Fixed Asset, 9=Income, 10=Long Term Liability, 11=Other Asset",
       },
       archived: {
         type: "boolean",
@@ -132,9 +132,9 @@ export const createChartOfAccount: Tool = {
         description: "Unique account number for the GL entry",
       },
       accountType: {
-        type: "string",
+        type: "number",
         description:
-          "Account type category (e.g., EXPENSE, INCOME, ASSET, LIABILITY, EQUITY, ACCOUNTS_PAYABLE, ACCOUNTS_RECEIVABLE, BANK, COST_OF_GOODS_SOLD)",
+          "Account type category as numeric enum: 0=Unspecified, 1=Accounts Payable, 2=Accounts Receivable, 3=Bank, 4=Cost of Goods Sold, 5=Credit Card, 6=Equity, 7=Expense, 8=Fixed Asset, 9=Income, 10=Long Term Liability, 11=Other Asset, 12=Other Current Asset, 13=Other Current Liability, 14=Other Expense, 15=Other Income, 16=Accumulated Depreciation",
       },
       description: {
         type: "string",
