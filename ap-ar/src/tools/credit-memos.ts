@@ -167,8 +167,9 @@ export const createCreditMemo: Tool = {
           ? JSON.parse(creditMemoLineItems)
           : creditMemoLineItems;
 
+      // API expects customerId as top-level field
       const body: Record<string, unknown> = {
-        customer: { id: customerId },
+        customerId,
         creditMemoLineItems: parsedLineItems,
       };
 
