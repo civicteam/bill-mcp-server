@@ -166,7 +166,9 @@ export const createRecurringInvoice: Tool = {
         schedule.daysInAdvance = daysInAdvance;
       }
 
+      // API requires both customerId at top level and customer object
       const body: Record<string, unknown> = {
+        customerId,
         customer: { id: customerId },
         schedule,
         recurringInvoiceLineItems: parsedLineItems,
