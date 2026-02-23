@@ -2,29 +2,51 @@
 
 A Model Context Protocol (MCP) server for integrating Bill.com accounting and payment services with AI assistants like Claude.
 
-## API Access Type
+## API Access Types
 
-This server uses the **Bill.com AP/AR API** with session-based authentication using AP/AR Sync Tokens.
+This server supports **three authentication modes** for the Bill.com AP/AR API:
 
-**Documentation**: [AP/AR Token-Based Sign In](https://developer.bill.com/docs/token-based-sign-in)
+| Auth Type | Access Level | Session Duration | Use Case |
+|-----------|-------------|------------------|----------|
+| `sync_token` | Limited (read/sync) | 48 hours | ERP syncing, reporting, read-only integrations |
+| `full_access` | Full (read/write) | 35 minutes | Complete AP/AR operations including payments |
+| `session_token` | Depends on token | External | When auth is handled by an external system |
 
-## Features
+**Documentation**:
+- [AP/AR Sync Token Sign In](https://developer.bill.com/docs/token-based-sign-in)
+- [Bill.com Keys and Tokens](https://developer.bill.com/docs/bill-keys-tokens)
+
+## Features (89 Tools)
 
 ### Accounts Payable (AP)
-- **Vendor Management**: List, view, create, and update vendors
-- **Bill Operations**: List, view, create, and update bills
-- **Payment Management**: List, view, create, and cancel payments
+- **Vendor Management**: List, get, create, update, archive, restore vendors
+- **Vendor Bank Accounts**: List, create, delete (Full Access only)
+- **Bill Operations**: List, get, create, update, archive, restore bills
+- **Recurring Bills**: Full CRUD operations
+- **Payment Management**: List, get, create, cancel, void payments
+- **Vendor Credits**: List, get, create, update, archive
+- **Bill Approvals**: Manage policies, approve/deny bills (Full Access only)
 
 ### Accounts Receivable (AR)
-- **Customer Management**: List, view, and create customers
-- **Invoice Management**: List, view, create, and send invoices
+- **Customer Management**: List, get, create, update, archive, restore customers
+- **Customer Bank Accounts**: List, create, delete (Full Access only)
+- **Charge Authorization**: Enable/disable customer charging (Full Access only)
+- **Invoice Management**: List, get, create, update, archive, restore, send invoices
+- **Recurring Invoices**: List, get, create, update
+- **Credit Memos**: List, get, create, update, archive, restore
+- **Receivable Payments**: List, get, charge customers (Full Access only)
 
-### Banking
-- **Bank Account Management**: List and view bank accounts
+### General Ledger (GL)
+- **Chart of Accounts**: List, get, create, update, archive, restore
+- **Classifications**: List departments, locations, jobs, employees, items, accounting classes
 
-### Core
-- **Session Management**: Automatic login and session refresh (48-hour sessions) - [Learn more](docs/SESSION_MANAGEMENT.md)
-- **Complete AP/AR Integration**: 21 tools covering all major Bill.com operations
+### Organization
+- **Bank Accounts**: List and view organization bank accounts
+- **User Management**: List, get, create, update, delete users (Full Access only)
+
+### Session Management
+- Automatic login and session refresh
+- 48-hour sessions for sync tokens, 35-minute sessions for full access
 
 ## Prerequisites
 
@@ -55,18 +77,38 @@ Create a `.env` file with your Bill.com AP/AR API credentials:
 # Required: Developer Key from Settings → Sync & Integrations → Manage Developer Keys
 BILL_DEV_KEY=your_developer_key_here
 
-# Required: AP/AR Sync Token name (the name you gave the token)
-BILL_USERNAME=your_sync_token_name
-
-# Required: AP/AR Sync Token value (the generated token)
-BILL_PASSWORD=your_sync_token_value
-
-# Required: Organization ID (starts with 008)
-BILL_ORGANIZATION_ID=008xxxxxxxxxxxxx
-
 # Optional: Environment (default: production)
 BILL_ENVIRONMENT=production
+
+# Optional: Auth type (default: sync_token)
+# - sync_token: Limited access, 48-hour sessions (for syncing/reporting)
+# - full_access: Full access, 35-minute sessions (for all operations)
+# - session_token: Use pre-authenticated token from external system
+BILL_AUTH_TYPE=sync_token
+
+# --- For sync_token and full_access auth ---
+BILL_ORGANIZATION_ID=008xxxxxxxxxxxxx
+BILL_USERNAME=your_username_here
+BILL_PASSWORD=your_password_here
+
+# --- For session_token auth (external auth handling) ---
+# BILL_SESSION_TOKEN=your_pre_authenticated_session_token
 ```
+
+### Auth Type Comparison
+
+| Feature | Sync Token | Full Access | Session Token |
+|---------|------------|-------------|---------------|
+| Read vendors, bills, invoices, customers | ✅ | ✅ | Depends on token |
+| Create/update vendors, bills, invoices | ✅ | ✅ | Depends on token |
+| Pay bills, void payments | ❌ | ✅ | Depends on token |
+| Send invoices | ❌ | ✅ | Depends on token |
+| Charge customers | ❌ | ✅ | Depends on token |
+| Manage users | ❌ | ✅ | Depends on token |
+| Manage bank accounts | ❌ | ✅ | Depends on token |
+| Approve/deny bills | ❌ | ✅ | Depends on token |
+| Session management | Auto-refresh | Auto-refresh | External |
+| Session duration | 48 hours | 35 minutes | External |
 
 ### Getting Bill.com AP/AR API Credentials
 
@@ -651,6 +693,7 @@ Add this server to your Claude Desktop configuration:
 
 **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
 
+### With Sync Token (limited access)
 ```json
 {
   "mcpServers": {
@@ -662,7 +705,46 @@ Add this server to your Claude Desktop configuration:
         "BILL_USERNAME": "your_sync_token_name",
         "BILL_PASSWORD": "your_sync_token_value",
         "BILL_ORGANIZATION_ID": "008xxxxxxxxxxxxx",
-        "BILL_ENVIRONMENT": "production"
+        "BILL_ENVIRONMENT": "production",
+        "BILL_AUTH_TYPE": "sync_token"
+      }
+    }
+  }
+}
+```
+
+### With Full Access (all operations)
+```json
+{
+  "mcpServers": {
+    "bill-com-ap-ar": {
+      "command": "node",
+      "args": ["/path/to/bill-mcp-server/ap-ar/dist/index.js"],
+      "env": {
+        "BILL_DEV_KEY": "your_dev_key",
+        "BILL_USERNAME": "user@company.com",
+        "BILL_PASSWORD": "your_user_password",
+        "BILL_ORGANIZATION_ID": "008xxxxxxxxxxxxx",
+        "BILL_ENVIRONMENT": "production",
+        "BILL_AUTH_TYPE": "full_access"
+      }
+    }
+  }
+}
+```
+
+### With Session Token (external auth)
+```json
+{
+  "mcpServers": {
+    "bill-com-ap-ar": {
+      "command": "node",
+      "args": ["/path/to/bill-mcp-server/ap-ar/dist/index.js"],
+      "env": {
+        "BILL_DEV_KEY": "your_dev_key",
+        "BILL_SESSION_TOKEN": "your_pre_authenticated_session_token",
+        "BILL_ENVIRONMENT": "production",
+        "BILL_AUTH_TYPE": "session_token"
       }
     }
   }

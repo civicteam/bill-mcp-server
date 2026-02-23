@@ -277,3 +277,189 @@ export const updateVendor: Tool = {
     }
   },
 };
+
+/**
+ * Archive vendor
+ */
+export const archiveVendor: Tool = {
+  name: "archive_vendor",
+  description: "Archive a vendor (soft delete). Archived vendors can be restored.",
+  inputSchema: {
+    type: "object",
+    properties: {
+      id: {
+        type: "string",
+        description: "The vendor ID to archive (starts with '009')",
+      },
+    },
+    required: ["id"],
+  },
+  handler: async (args: any, client: BillClient) => {
+    try {
+      const result = await client.post(`/vendors/${args.id}/archive`);
+      return {
+        success: true,
+        data: result,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
+    }
+  },
+};
+
+/**
+ * Restore vendor
+ */
+export const restoreVendor: Tool = {
+  name: "restore_vendor",
+  description: "Restore an archived vendor",
+  inputSchema: {
+    type: "object",
+    properties: {
+      id: {
+        type: "string",
+        description: "The vendor ID to restore (starts with '009')",
+      },
+    },
+    required: ["id"],
+  },
+  handler: async (args: any, client: BillClient) => {
+    try {
+      const result = await client.post(`/vendors/${args.id}/restore`);
+      return {
+        success: true,
+        data: result,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
+    }
+  },
+};
+
+/**
+ * List vendor bank accounts (Full API Access only)
+ */
+export const listVendorBankAccounts: Tool = {
+  name: "list_vendor_bank_accounts",
+  description:
+    "List bank accounts associated with a vendor. Requires full API access.",
+  inputSchema: {
+    type: "object",
+    properties: {
+      vendorId: {
+        type: "string",
+        description: "The vendor ID (starts with '009')",
+      },
+    },
+    required: ["vendorId"],
+  },
+  handler: async (args: any, client: BillClient) => {
+    try {
+      const result = await client.get(`/vendors/${args.vendorId}/bank-accounts`);
+      return {
+        success: true,
+        data: result,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
+    }
+  },
+};
+
+/**
+ * Create vendor bank account (Full API Access only)
+ */
+export const createVendorBankAccount: Tool = {
+  name: "create_vendor_bank_account",
+  description:
+    "Add a bank account to a vendor for payments. Requires full API access (not available with sync token).",
+  inputSchema: {
+    type: "object",
+    properties: {
+      vendorId: {
+        type: "string",
+        description: "The vendor ID (starts with '009')",
+      },
+      routingNumber: {
+        type: "string",
+        description: "Bank routing number (9 digits)",
+      },
+      accountNumber: {
+        type: "string",
+        description: "Bank account number",
+      },
+      accountType: {
+        type: "string",
+        description: "Account type: CHECKING or SAVINGS",
+        enum: ["CHECKING", "SAVINGS"],
+      },
+      usersChoice: {
+        type: "boolean",
+        description: "Whether this is the preferred payment method for the vendor",
+      },
+    },
+    required: ["vendorId", "routingNumber", "accountNumber", "accountType"],
+  },
+  handler: async (args: any, client: BillClient) => {
+    try {
+      const { vendorId, ...bankData } = args;
+      const result = await client.post(`/vendors/${vendorId}/bank-accounts`, bankData);
+      return {
+        success: true,
+        data: result,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
+    }
+  },
+};
+
+/**
+ * Delete vendor bank account (Full API Access only)
+ */
+export const deleteVendorBankAccount: Tool = {
+  name: "delete_vendor_bank_account",
+  description:
+    "Delete a vendor's bank account. Requires full API access (not available with sync token).",
+  inputSchema: {
+    type: "object",
+    properties: {
+      vendorId: {
+        type: "string",
+        description: "The vendor ID (starts with '009')",
+      },
+      bankAccountId: {
+        type: "string",
+        description: "The bank account ID to delete",
+      },
+    },
+    required: ["vendorId", "bankAccountId"],
+  },
+  handler: async (args: any, client: BillClient) => {
+    try {
+      const { vendorId, bankAccountId } = args;
+      const result = await client.delete(`/vendors/${vendorId}/bank-accounts/${bankAccountId}`);
+      return {
+        success: true,
+        data: result,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
+    }
+  },
+};

@@ -269,3 +269,225 @@ export const updateCustomer: Tool = {
     }
   },
 };
+
+/**
+ * Archive customer
+ */
+export const archiveCustomer: Tool = {
+  name: "archive_customer",
+  description: "Archive a customer (soft delete). Archived customers can be restored.",
+  inputSchema: {
+    type: "object",
+    properties: {
+      id: {
+        type: "string",
+        description: "The customer ID to archive (starts with '0cu')",
+      },
+    },
+    required: ["id"],
+  },
+  handler: async (args: any, client: BillClient) => {
+    try {
+      const result = await client.post(`/customers/${args.id}/archive`);
+      return {
+        success: true,
+        data: result,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
+    }
+  },
+};
+
+/**
+ * Restore customer
+ */
+export const restoreCustomer: Tool = {
+  name: "restore_customer",
+  description: "Restore an archived customer",
+  inputSchema: {
+    type: "object",
+    properties: {
+      id: {
+        type: "string",
+        description: "The customer ID to restore (starts with '0cu')",
+      },
+    },
+    required: ["id"],
+  },
+  handler: async (args: any, client: BillClient) => {
+    try {
+      const result = await client.post(`/customers/${args.id}/restore`);
+      return {
+        success: true,
+        data: result,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
+    }
+  },
+};
+
+/**
+ * List customer bank accounts (Full API Access only)
+ */
+export const listCustomerBankAccounts: Tool = {
+  name: "list_customer_bank_accounts",
+  description:
+    "List bank accounts associated with a customer. Requires full API access.",
+  inputSchema: {
+    type: "object",
+    properties: {
+      customerId: {
+        type: "string",
+        description: "The customer ID (starts with '0cu')",
+      },
+    },
+    required: ["customerId"],
+  },
+  handler: async (args: any, client: BillClient) => {
+    try {
+      const result = await client.get(`/customers/${args.customerId}/bank-accounts`);
+      return {
+        success: true,
+        data: result,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
+    }
+  },
+};
+
+/**
+ * Create customer bank account (Full API Access only)
+ */
+export const createCustomerBankAccount: Tool = {
+  name: "create_customer_bank_account",
+  description:
+    "Add a bank account to a customer for receiving payments. Requires full API access (not available with sync token).",
+  inputSchema: {
+    type: "object",
+    properties: {
+      customerId: {
+        type: "string",
+        description: "The customer ID (starts with '0cu')",
+      },
+      routingNumber: {
+        type: "string",
+        description: "Bank routing number (9 digits)",
+      },
+      accountNumber: {
+        type: "string",
+        description: "Bank account number",
+      },
+      accountType: {
+        type: "string",
+        description: "Account type: CHECKING or SAVINGS",
+        enum: ["CHECKING", "SAVINGS"],
+      },
+    },
+    required: ["customerId", "routingNumber", "accountNumber", "accountType"],
+  },
+  handler: async (args: any, client: BillClient) => {
+    try {
+      const { customerId, ...bankData } = args;
+      const result = await client.post(`/customers/${customerId}/bank-accounts`, bankData);
+      return {
+        success: true,
+        data: result,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
+    }
+  },
+};
+
+/**
+ * Delete customer bank account (Full API Access only)
+ */
+export const deleteCustomerBankAccount: Tool = {
+  name: "delete_customer_bank_account",
+  description:
+    "Delete a customer's bank account. Requires full API access (not available with sync token).",
+  inputSchema: {
+    type: "object",
+    properties: {
+      customerId: {
+        type: "string",
+        description: "The customer ID (starts with '0cu')",
+      },
+      bankAccountId: {
+        type: "string",
+        description: "The bank account ID to delete",
+      },
+    },
+    required: ["customerId", "bankAccountId"],
+  },
+  handler: async (args: any, client: BillClient) => {
+    try {
+      const { customerId, bankAccountId } = args;
+      const result = await client.delete(`/customers/${customerId}/bank-accounts/${bankAccountId}`);
+      return {
+        success: true,
+        data: result,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
+    }
+  },
+};
+
+/**
+ * Set customer charge authorization (Full API Access only)
+ */
+export const setCustomerChargeAuthorization: Tool = {
+  name: "set_customer_charge_authorization",
+  description:
+    "Enable or disable the ability to charge a customer's bank account. Required before using charge_customer. Requires full API access.",
+  inputSchema: {
+    type: "object",
+    properties: {
+      customerId: {
+        type: "string",
+        description: "The customer ID (starts with '0cu')",
+      },
+      authorizedToCharge: {
+        type: "boolean",
+        description: "Whether the customer authorizes you to charge their bank account",
+      },
+    },
+    required: ["customerId", "authorizedToCharge"],
+  },
+  handler: async (args: any, client: BillClient) => {
+    try {
+      const { customerId, authorizedToCharge } = args;
+      const result = await client.post(`/customers/${customerId}/charge-authorization`, {
+        authorizedToCharge,
+      });
+      return {
+        success: true,
+        data: result,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
+    }
+  },
+};

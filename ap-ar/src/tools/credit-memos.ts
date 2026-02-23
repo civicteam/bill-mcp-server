@@ -197,3 +197,148 @@ export const createCreditMemo: Tool = {
     }
   },
 };
+
+/**
+ * Update credit memo
+ */
+export const updateCreditMemo: Tool = {
+  name: "update_credit_memo",
+  description: "Update an existing credit memo",
+  inputSchema: {
+    type: "object",
+    properties: {
+      id: {
+        type: "string",
+        description: "The credit memo ID to update",
+      },
+      creditMemoDate: {
+        type: "string",
+        description: "Date of the credit memo (YYYY-MM-DD format)",
+      },
+      referenceNumber: {
+        type: "string",
+        description: "Credit memo reference number",
+      },
+      creditMemoLineItems: {
+        type: "array",
+        description: "Line items for the credit memo",
+        items: {
+          type: "object",
+          properties: {
+            description: {
+              type: "string",
+              description: "Item description",
+            },
+            quantity: {
+              type: "number",
+              description: "Quantity",
+            },
+            price: {
+              type: "number",
+              description: "Unit price",
+            },
+          },
+          required: ["description", "quantity", "price"],
+        },
+      },
+      description: {
+        type: "string",
+        description: "Description or memo",
+      },
+    },
+    required: ["id"],
+  },
+  handler: async (args: any, client: BillClient) => {
+    try {
+      const { id, creditMemoDate, creditMemoLineItems, ...rest } = args;
+
+      const body: Record<string, unknown> = { ...rest };
+
+      if (creditMemoDate) {
+        body.creditDate = creditMemoDate;
+      }
+
+      if (creditMemoLineItems) {
+        body.creditMemoLineItems =
+          typeof creditMemoLineItems === "string"
+            ? JSON.parse(creditMemoLineItems)
+            : creditMemoLineItems;
+      }
+
+      const creditMemo = await client.patch(`/credit-memos/${id}`, body);
+      return {
+        success: true,
+        data: creditMemo,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
+    }
+  },
+};
+
+/**
+ * Archive credit memo
+ */
+export const archiveCreditMemo: Tool = {
+  name: "archive_credit_memo",
+  description: "Archive a credit memo (soft delete). Archived credit memos can be restored.",
+  inputSchema: {
+    type: "object",
+    properties: {
+      id: {
+        type: "string",
+        description: "The credit memo ID to archive",
+      },
+    },
+    required: ["id"],
+  },
+  handler: async (args: any, client: BillClient) => {
+    try {
+      const result = await client.post(`/credit-memos/${args.id}/archive`);
+      return {
+        success: true,
+        data: result,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
+    }
+  },
+};
+
+/**
+ * Restore credit memo
+ */
+export const restoreCreditMemo: Tool = {
+  name: "restore_credit_memo",
+  description: "Restore an archived credit memo",
+  inputSchema: {
+    type: "object",
+    properties: {
+      id: {
+        type: "string",
+        description: "The credit memo ID to restore",
+      },
+    },
+    required: ["id"],
+  },
+  handler: async (args: any, client: BillClient) => {
+    try {
+      const result = await client.post(`/credit-memos/${args.id}/restore`);
+      return {
+        success: true,
+        data: result,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
+    }
+  },
+};
