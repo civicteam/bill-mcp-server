@@ -16,19 +16,68 @@ import {
 import { BillClient } from "./bill-client.js";
 import { tools } from "./tools/index.js";
 
+import { AuthType, BillConfig } from "./bill-client.js";
+
 /**
  * Get Bill.com API configuration from environment variables
+ *
+ * Environment variables:
+ * - BILL_DEV_KEY: Developer key from Bill.com (required)
+ * - BILL_ENVIRONMENT: "sandbox" or "production" (default: production)
+ * - BILL_AUTH_TYPE: "sync_token", "full_access", or "session_token" (default: sync_token)
+ *
+ * For sync_token and full_access auth:
+ * - BILL_USERNAME: For sync_token: token name. For full_access: user email
+ * - BILL_PASSWORD: For sync_token: token value. For full_access: user password
+ * - BILL_ORGANIZATION_ID: Organization identifier
+ *
+ * For session_token auth (external auth handling):
+ * - BILL_SESSION_TOKEN: Pre-authenticated session token from external system
+ *
+ * Auth type differences:
+ * - sync_token: Limited access (read data, no payments/invoicing), 48-hour session
+ * - full_access: Full access (all operations), 35-minute session
+ * - session_token: Uses externally-provided token, no login performed
  */
-function getBillConfig() {
+function getBillConfig(): BillConfig {
   const devKey = process.env.BILL_DEV_KEY;
+  const environment = process.env.BILL_ENVIRONMENT || "production";
+  const authType = process.env.BILL_AUTH_TYPE || "sync_token";
+
+  if (!devKey) {
+    throw new Error("BILL_DEV_KEY environment variable is required.");
+  }
+
+  if (authType !== "sync_token" && authType !== "full_access" && authType !== "session_token") {
+    throw new Error(
+      `Invalid BILL_AUTH_TYPE: "${authType}". Must be "sync_token", "full_access", or "session_token".`
+    );
+  }
+
+  // For session_token auth, only need the session token
+  if (authType === "session_token") {
+    const sessionToken = process.env.BILL_SESSION_TOKEN;
+    if (!sessionToken) {
+      throw new Error(
+        "BILL_SESSION_TOKEN environment variable is required for session_token auth type."
+      );
+    }
+    return {
+      devKey,
+      environment: environment as "sandbox" | "production",
+      authType: authType as AuthType,
+      sessionToken,
+    };
+  }
+
+  // For sync_token and full_access, need login credentials
   const username = process.env.BILL_USERNAME;
   const password = process.env.BILL_PASSWORD;
   const organizationId = process.env.BILL_ORGANIZATION_ID;
-  const environment = process.env.BILL_ENVIRONMENT || "production";
 
-  if (!devKey || !username || !password || !organizationId) {
+  if (!username || !password || !organizationId) {
     throw new Error(
-      "Bill.com credentials not found. Please set BILL_DEV_KEY, BILL_USERNAME, BILL_PASSWORD, and BILL_ORGANIZATION_ID environment variables."
+      "Bill.com credentials not found. Please set BILL_USERNAME, BILL_PASSWORD, and BILL_ORGANIZATION_ID environment variables."
     );
   }
 
@@ -38,6 +87,7 @@ function getBillConfig() {
     password,
     organizationId,
     environment: environment as "sandbox" | "production",
+    authType: authType as AuthType,
   };
 }
 
@@ -50,6 +100,7 @@ async function main() {
   // Get configuration
   const config = getBillConfig();
   console.error(`[Bill.com MCP Server] Environment: ${config.environment}`);
+  console.error(`[Bill.com MCP Server] Auth type: ${config.authType}`);
 
   // Initialize Bill.com API client
   const billClient = new BillClient(config);

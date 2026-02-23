@@ -311,3 +311,93 @@ export const listPendingBillApprovals: Tool = {
   },
 };
 
+/**
+ * Approve a bill (Full API Access only)
+ */
+export const approveBill: Tool = {
+  name: "approve_bill",
+  description:
+    "Approve a bill that is pending approval. Requires full API access (not available with sync token). The authenticated user must be an approver for the bill.",
+  inputSchema: {
+    type: "object",
+    properties: {
+      billId: {
+        type: "string",
+        description: "The bill ID to approve (starts with '00n')",
+      },
+      comment: {
+        type: "string",
+        description: "Optional comment for the approval",
+      },
+    },
+    required: ["billId"],
+  },
+  handler: async (args: any, client: BillClient) => {
+    try {
+      const { billId, comment } = args;
+      const body: Record<string, unknown> = {
+        action: "APPROVE",
+      };
+      if (comment) {
+        body.comment = comment;
+      }
+
+      const result = await client.post(`/bill-approvals/${billId}`, body);
+      return {
+        success: true,
+        data: result,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
+    }
+  },
+};
+
+/**
+ * Deny a bill (Full API Access only)
+ */
+export const denyBill: Tool = {
+  name: "deny_bill",
+  description:
+    "Deny/reject a bill that is pending approval. Requires full API access (not available with sync token). The authenticated user must be an approver for the bill.",
+  inputSchema: {
+    type: "object",
+    properties: {
+      billId: {
+        type: "string",
+        description: "The bill ID to deny (starts with '00n')",
+      },
+      comment: {
+        type: "string",
+        description: "Reason for denying the bill (recommended)",
+      },
+    },
+    required: ["billId"],
+  },
+  handler: async (args: any, client: BillClient) => {
+    try {
+      const { billId, comment } = args;
+      const body: Record<string, unknown> = {
+        action: "DENY",
+      };
+      if (comment) {
+        body.comment = comment;
+      }
+
+      const result = await client.post(`/bill-approvals/${billId}`, body);
+      return {
+        success: true,
+        data: result,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
+    }
+  },
+};
+

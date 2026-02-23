@@ -335,3 +335,67 @@ export const updateBill: Tool = {
     }
   },
 };
+
+/**
+ * Archive bill
+ */
+export const archiveBill: Tool = {
+  name: "archive_bill",
+  description: "Archive a bill (soft delete). Archived bills can be restored.",
+  inputSchema: {
+    type: "object",
+    properties: {
+      id: {
+        type: "string",
+        description: "The bill ID to archive (starts with '00n')",
+      },
+    },
+    required: ["id"],
+  },
+  handler: async (args: any, client: BillClient) => {
+    try {
+      const result = await client.post(`/bills/${args.id}/archive`);
+      return {
+        success: true,
+        data: result,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
+    }
+  },
+};
+
+/**
+ * Restore bill
+ */
+export const restoreBill: Tool = {
+  name: "restore_bill",
+  description: "Restore an archived bill",
+  inputSchema: {
+    type: "object",
+    properties: {
+      id: {
+        type: "string",
+        description: "The bill ID to restore (starts with '00n')",
+      },
+    },
+    required: ["id"],
+  },
+  handler: async (args: any, client: BillClient) => {
+    try {
+      const result = await client.post(`/bills/${args.id}/restore`);
+      return {
+        success: true,
+        data: result,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
+    }
+  },
+};

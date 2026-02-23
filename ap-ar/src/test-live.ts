@@ -16,6 +16,7 @@ async function testBillApi() {
     password: process.env.BILL_PASSWORD || "",
     organizationId: process.env.BILL_ORGANIZATION_ID || "",
     environment: (process.env.BILL_ENVIRONMENT as "sandbox" | "production") || "sandbox",
+    authType: (process.env.BILL_AUTH_TYPE as "sync_token" | "full_access") || "sync_token",
   };
 
   console.log("Config:", {
@@ -23,6 +24,7 @@ async function testBillApi() {
     username: config.username,
     organizationId: config.organizationId,
     environment: config.environment,
+    authType: config.authType,
     password: "***" + config.password.slice(-4),
   });
   console.log();

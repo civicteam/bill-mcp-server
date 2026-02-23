@@ -205,7 +205,8 @@ export const createInvoice: Tool = {
  */
 export const sendInvoice: Tool = {
   name: "send_invoice",
-  description: "Send an invoice to the customer via email",
+  description:
+    "Send an invoice to the customer via email. Requires full API access (not available with sync token).",
   inputSchema: {
     type: "object",
     properties: {
@@ -238,6 +239,183 @@ export const sendInvoice: Tool = {
         payload.replyTo = { userId: replyToUserId };
       }
       const result = await client.post(`/invoices/${id}/email`, payload);
+      return {
+        success: true,
+        data: result,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
+    }
+  },
+};
+
+/**
+ * Update invoice
+ */
+export const updateInvoice: Tool = {
+  name: "update_invoice",
+  description: "Update an existing invoice",
+  inputSchema: {
+    type: "object",
+    properties: {
+      id: {
+        type: "string",
+        description: "The invoice ID to update (starts with '00e')",
+      },
+      invoiceNumber: {
+        type: "string",
+        description: "Invoice number",
+      },
+      invoiceDate: {
+        type: "string",
+        description: "Invoice date (YYYY-MM-DD format)",
+      },
+      dueDate: {
+        type: "string",
+        description: "Payment due date (YYYY-MM-DD format)",
+      },
+      invoiceLineItems: {
+        type: "array",
+        description: "Invoice line items",
+        items: {
+          type: "object",
+          properties: {
+            description: {
+              type: "string",
+              description: "Item description",
+            },
+            quantity: {
+              type: "number",
+              description: "Quantity",
+            },
+            price: {
+              type: "number",
+              description: "Unit price",
+            },
+          },
+          required: ["description", "quantity", "price"],
+        },
+      },
+      description: {
+        type: "string",
+        description: "Invoice description or memo",
+      },
+    },
+    required: ["id"],
+  },
+  handler: async (args: any, client: BillClient) => {
+    try {
+      const { id, invoiceLineItems, ...rest } = args;
+
+      const body: Record<string, unknown> = { ...rest };
+      if (invoiceLineItems) {
+        body.invoiceLineItems =
+          typeof invoiceLineItems === "string"
+            ? JSON.parse(invoiceLineItems)
+            : invoiceLineItems;
+      }
+
+      const invoice = await client.patch(`/invoices/${id}`, body);
+      return {
+        success: true,
+        data: invoice,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
+    }
+  },
+};
+
+/**
+ * Archive invoice
+ */
+export const archiveInvoice: Tool = {
+  name: "archive_invoice",
+  description: "Archive an invoice (soft delete). Archived invoices can be restored.",
+  inputSchema: {
+    type: "object",
+    properties: {
+      id: {
+        type: "string",
+        description: "The invoice ID to archive (starts with '00e')",
+      },
+    },
+    required: ["id"],
+  },
+  handler: async (args: any, client: BillClient) => {
+    try {
+      const result = await client.post(`/invoices/${args.id}/archive`);
+      return {
+        success: true,
+        data: result,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
+    }
+  },
+};
+
+/**
+ * Restore invoice
+ */
+export const restoreInvoice: Tool = {
+  name: "restore_invoice",
+  description: "Restore an archived invoice",
+  inputSchema: {
+    type: "object",
+    properties: {
+      id: {
+        type: "string",
+        description: "The invoice ID to restore (starts with '00e')",
+      },
+    },
+    required: ["id"],
+  },
+  handler: async (args: any, client: BillClient) => {
+    try {
+      const result = await client.post(`/invoices/${args.id}/restore`);
+      return {
+        success: true,
+        data: result,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
+    }
+  },
+};
+
+/**
+ * Generate invoice payment link
+ */
+export const generateInvoicePaymentLink: Tool = {
+  name: "generate_invoice_payment_link",
+  description:
+    "Generate a payment link for an invoice that customers can use to pay online",
+  inputSchema: {
+    type: "object",
+    properties: {
+      id: {
+        type: "string",
+        description: "The invoice ID (starts with '00e')",
+      },
+    },
+    required: ["id"],
+  },
+  handler: async (args: any, client: BillClient) => {
+    try {
+      const result = await client.post(`/invoices/${args.id}/payment-link`);
       return {
         success: true,
         data: result,

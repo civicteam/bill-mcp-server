@@ -232,13 +232,13 @@ export const createPayment: Tool = {
  */
 export const cancelPayment: Tool = {
   name: "cancel_payment",
-  description: "Cancel a scheduled payment",
+  description: "Cancel a scheduled payment that has not yet started processing",
   inputSchema: {
     type: "object",
     properties: {
       id: {
         type: "string",
-        description: "The payment ID to cancel",
+        description: "The payment ID to cancel (starts with 'stp')",
       },
     },
     required: ["id"],
@@ -246,6 +246,96 @@ export const cancelPayment: Tool = {
   handler: async (args: any, client: BillClient) => {
     try {
       const result = await client.post(`/payments/${args.id}/cancel`);
+      return {
+        success: true,
+        data: result,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
+    }
+  },
+};
+
+/**
+ * Void payment (Full API Access only)
+ */
+export const voidPayment: Tool = {
+  name: "void_payment",
+  description:
+    "Void a payment that has already started processing and cannot be canceled. Requires full API access (not available with sync token).",
+  inputSchema: {
+    type: "object",
+    properties: {
+      id: {
+        type: "string",
+        description: "The payment ID to void (starts with 'stp')",
+      },
+      reason: {
+        type: "string",
+        description: "Reason for voiding the payment",
+      },
+    },
+    required: ["id", "reason"],
+  },
+  handler: async (args: any, client: BillClient) => {
+    try {
+      const { id, reason } = args;
+      const result = await client.post(`/payments/${id}/void`, {
+        type: "VOID",
+        reason,
+      });
+      return {
+        success: true,
+        data: result,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
+    }
+  },
+};
+
+/**
+ * Get vendor payment options
+ */
+export const getVendorPaymentOptions: Tool = {
+  name: "get_vendor_payment_options",
+  description:
+    "Get available payment options for a vendor including payment methods, delivery options, and processing times.",
+  inputSchema: {
+    type: "object",
+    properties: {
+      vendorId: {
+        type: "string",
+        description: "The vendor ID (starts with '009')",
+      },
+      amount: {
+        type: "number",
+        description: "Payment amount to check options for",
+      },
+      fundingAccountId: {
+        type: "string",
+        description: "The bank account ID to fund the payment from",
+      },
+    },
+    required: ["vendorId", "amount", "fundingAccountId"],
+  },
+  handler: async (args: any, client: BillClient) => {
+    try {
+      const { vendorId, amount, fundingAccountId } = args;
+      const result = await client.post("/payments/options", {
+        vendorId,
+        amount,
+        fundingAccount: {
+          type: "BANK_ACCOUNT",
+          id: fundingAccountId,
+        },
+      });
       return {
         success: true,
         data: result,
