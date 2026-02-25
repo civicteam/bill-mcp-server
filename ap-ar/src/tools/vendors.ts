@@ -343,12 +343,12 @@ export const restoreVendor: Tool = {
 };
 
 /**
- * List vendor bank accounts (Full API Access only)
+ * Get vendor bank account (Full API Access only)
  */
-export const listVendorBankAccounts: Tool = {
-  name: "list_vendor_bank_accounts",
+export const getVendorBankAccount: Tool = {
+  name: "get_vendor_bank_account",
   description:
-    "List bank accounts associated with a vendor. Requires full API access.",
+    "Get the bank account associated with a vendor. Each vendor can only have one bank account. Requires full API access.",
   inputSchema: {
     type: "object",
     properties: {
@@ -361,7 +361,8 @@ export const listVendorBankAccounts: Tool = {
   },
   handler: async (args: any, client: BillClient) => {
     try {
-      const result = await client.get(`/vendors/${args.vendorId}/bank-accounts`);
+      // API uses singular 'bank-account' not plural 'bank-accounts'
+      const result = await client.get(`/vendors/${args.vendorId}/bank-account`);
       return {
         success: true,
         data: result,
@@ -381,7 +382,7 @@ export const listVendorBankAccounts: Tool = {
 export const createVendorBankAccount: Tool = {
   name: "create_vendor_bank_account",
   description:
-    "Add a bank account to a vendor for payments. Requires full API access (not available with sync token).",
+    "Add a bank account to a vendor for payments. Each vendor can only have one bank account. To update, delete the existing one first. Requires full API access (not available with sync token).",
   inputSchema: {
     type: "object",
     properties: {
@@ -397,7 +398,7 @@ export const createVendorBankAccount: Tool = {
         type: "string",
         description: "Bank account number",
       },
-      accountType: {
+      type: {
         type: "string",
         description: "Account type: CHECKING or SAVINGS",
         enum: ["CHECKING", "SAVINGS"],
@@ -407,12 +408,13 @@ export const createVendorBankAccount: Tool = {
         description: "Whether this is the preferred payment method for the vendor",
       },
     },
-    required: ["vendorId", "routingNumber", "accountNumber", "accountType"],
+    required: ["vendorId", "routingNumber", "accountNumber", "type"],
   },
   handler: async (args: any, client: BillClient) => {
     try {
       const { vendorId, ...bankData } = args;
-      const result = await client.post(`/vendors/${vendorId}/bank-accounts`, bankData);
+      // API uses singular 'bank-account' not plural 'bank-accounts'
+      const result = await client.post(`/vendors/${vendorId}/bank-account`, bankData);
       return {
         success: true,
         data: result,
@@ -440,17 +442,14 @@ export const deleteVendorBankAccount: Tool = {
         type: "string",
         description: "The vendor ID (starts with '009')",
       },
-      bankAccountId: {
-        type: "string",
-        description: "The bank account ID to delete",
-      },
     },
-    required: ["vendorId", "bankAccountId"],
+    required: ["vendorId"],
   },
   handler: async (args: any, client: BillClient) => {
     try {
-      const { vendorId, bankAccountId } = args;
-      const result = await client.delete(`/vendors/${vendorId}/bank-accounts/${bankAccountId}`);
+      const { vendorId } = args;
+      // API uses singular 'bank-account' - each vendor has only one bank account
+      const result = await client.delete(`/vendors/${vendorId}/bank-account`);
       return {
         success: true,
         data: result,

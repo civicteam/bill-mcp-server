@@ -45,8 +45,12 @@ export function buildFilterString(clauses: FilterClause[]): string {
 /**
  * Build the complete query params object for a Bill.com v3 list endpoint.
  *
- * Always includes `max` (default 50) and `sort` (default `createdTime:desc`).
- * Only includes `filters` and `page` when they have values.
+ * Always includes `max` (default 50).
+ * Only includes `sort`, `filters`, and `page` when they have values.
+ *
+ * Note: Not all endpoints support the same sort fields. For example,
+ * recurring bills only support sorting by `archived`. The caller should
+ * only pass `sort` when the endpoint supports the desired sort field.
  */
 export function buildListParams(options: {
   max?: number;
@@ -57,7 +61,11 @@ export function buildListParams(options: {
   const params: Record<string, string | number> = {};
 
   params.max = options.max ?? 50;
-  params.sort = options.sort ?? "createdTime:desc";
+
+  // Only include sort if explicitly provided - not all endpoints support the same sort fields
+  if (options.sort) {
+    params.sort = options.sort;
+  }
 
   if (options.page) {
     params.page = options.page;

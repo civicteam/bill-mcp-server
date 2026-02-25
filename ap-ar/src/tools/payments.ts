@@ -328,13 +328,12 @@ export const getVendorPaymentOptions: Tool = {
   handler: async (args: any, client: BillClient) => {
     try {
       const { vendorId, amount, fundingAccountId } = args;
-      const result = await client.post("/payments/options", {
+      // GET request with query parameters
+      const result = await client.get("/payments/options", {
         vendorId,
         amount,
-        fundingAccount: {
-          type: "BANK_ACCOUNT",
-          id: fundingAccountId,
-        },
+        "fundingAccount.type": "BANK_ACCOUNT",
+        "fundingAccount.id": fundingAccountId,
       });
       return {
         success: true,

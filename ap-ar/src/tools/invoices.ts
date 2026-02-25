@@ -402,7 +402,7 @@ export const restoreInvoice: Tool = {
 export const generateInvoicePaymentLink: Tool = {
   name: "generate_invoice_payment_link",
   description:
-    "Generate a payment link for an invoice that customers can use to pay online",
+    "Generate a payment link for an invoice that customers can use to pay online. The link allows customers to pay without needing a BILL account.",
   inputSchema: {
     type: "object",
     properties: {
@@ -410,12 +410,29 @@ export const generateInvoicePaymentLink: Tool = {
         type: "string",
         description: "The invoice ID (starts with '00e')",
       },
+      customerId: {
+        type: "string",
+        description: "The customer ID (starts with '0cu')",
+      },
+      email: {
+        type: "string",
+        description: "Email address to send payment receipt to",
+      },
+      returnUrl: {
+        type: "string",
+        description: "Optional URL to redirect the customer to after payment is complete",
+      },
     },
-    required: ["id"],
+    required: ["id", "customerId", "email"],
   },
   handler: async (args: any, client: BillClient) => {
     try {
-      const result = await client.post(`/invoices/${args.id}/payment-link`);
+      const { id, customerId, email, returnUrl } = args;
+      const body: Record<string, string> = { customerId, email };
+      if (returnUrl) {
+        body.returnUrl = returnUrl;
+      }
+      const result = await client.post(`/invoices/${id}/payment-link`, body);
       return {
         success: true,
         data: result,

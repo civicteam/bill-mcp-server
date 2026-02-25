@@ -7,6 +7,34 @@ import { BillClient } from "../bill-client.js";
 import { buildListParams } from "./list-params.js";
 
 /**
+ * List user roles
+ */
+export const listUserRoles: Tool = {
+  name: "list_user_roles",
+  description:
+    "List available user roles in the Bill.com organization. Use the returned role IDs when creating or updating users.",
+  inputSchema: {
+    type: "object",
+    properties: {},
+    required: [],
+  },
+  handler: async (_args: any, client: BillClient) => {
+    try {
+      const roles = await client.get("/roles");
+      return {
+        success: true,
+        data: roles,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
+    }
+  },
+};
+
+/**
  * List users
  */
 export const listUsers: Tool = {
@@ -93,7 +121,7 @@ export const getUser: Tool = {
 export const createUser: Tool = {
   name: "create_user",
   description:
-    "Create a new user in the Bill.com organization. Requires full API access (not available with sync token).",
+    "Create a new user in the Bill.com organization. Requires full API access (not available with sync token). Use list_user_roles to get available role IDs.",
   inputSchema: {
     type: "object",
     properties: {
@@ -113,9 +141,9 @@ export const createUser: Tool = {
         type: "string",
         description: "User's phone number",
       },
-      role: {
+      roleId: {
         type: "string",
-        description: "User role (e.g., ADMINISTRATOR, ACCOUNTANT, PAYER, APPROVER, CLERK)",
+        description: "BILL-generated role ID (e.g., '00r...'). Use list_user_roles to get available role IDs. If not specified, defaults to ADMINISTRATOR role.",
       },
       departmentIds: {
         type: "array",
@@ -149,7 +177,7 @@ export const createUser: Tool = {
 export const updateUser: Tool = {
   name: "update_user",
   description:
-    "Update an existing user. Requires full API access (not available with sync token).",
+    "Update an existing user. Requires full API access (not available with sync token). Use list_user_roles to get available role IDs.",
   inputSchema: {
     type: "object",
     properties: {
@@ -169,9 +197,9 @@ export const updateUser: Tool = {
         type: "string",
         description: "User's phone number",
       },
-      role: {
+      roleId: {
         type: "string",
-        description: "User role",
+        description: "BILL-generated role ID (e.g., '00r...'). Use list_user_roles to get available role IDs.",
       },
       departmentIds: {
         type: "array",

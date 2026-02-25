@@ -373,13 +373,17 @@ export const listCustomerBankAccounts: Tool = {
 export const createCustomerBankAccount: Tool = {
   name: "create_customer_bank_account",
   description:
-    "Add a bank account to a customer for receiving payments. Requires full API access (not available with sync token).",
+    "Add a bank account to a customer for receiving payments. Requires full API access (not available with sync token). The customer must have a billing address set before adding a bank account.",
   inputSchema: {
     type: "object",
     properties: {
       customerId: {
         type: "string",
         description: "The customer ID (starts with '0cu')",
+      },
+      nameOnAccount: {
+        type: "string",
+        description: "Full name on the bank account",
       },
       routingNumber: {
         type: "string",
@@ -389,13 +393,18 @@ export const createCustomerBankAccount: Tool = {
         type: "string",
         description: "Bank account number",
       },
-      accountType: {
+      type: {
         type: "string",
         description: "Account type: CHECKING or SAVINGS",
         enum: ["CHECKING", "SAVINGS"],
       },
+      ownerType: {
+        type: "string",
+        description: "Bank account owner type: BUSINESS or PERSONAL",
+        enum: ["BUSINESS", "PERSONAL"],
+      },
     },
-    required: ["customerId", "routingNumber", "accountNumber", "accountType"],
+    required: ["customerId", "nameOnAccount", "routingNumber", "accountNumber", "type", "ownerType"],
   },
   handler: async (args: any, client: BillClient) => {
     try {

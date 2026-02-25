@@ -12,7 +12,7 @@ import {
   updateVendor,
   archiveVendor,
   restoreVendor,
-  listVendorBankAccounts,
+  getVendorBankAccount,
   createVendorBankAccount,
   deleteVendorBankAccount,
 } from "./vendors.js";
@@ -107,6 +107,7 @@ import {
   chargeCustomer,
 } from "./receivable-payments.js";
 import {
+  listUserRoles,
   listUsers,
   getUser,
   createUser,
@@ -147,7 +148,7 @@ export const tools: Tool[] = [
   updateVendor,
   archiveVendor,
   restoreVendor,
-  listVendorBankAccounts, // Full API Access
+  getVendorBankAccount, // Full API Access
   createVendorBankAccount, // Full API Access
   deleteVendorBankAccount, // Full API Access
 
@@ -253,6 +254,7 @@ export const tools: Tool[] = [
   denyBill, // Full API Access
 
   // Users
+  listUserRoles,
   listUsers,
   getUser,
   createUser, // Full API Access

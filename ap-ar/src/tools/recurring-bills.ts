@@ -12,7 +12,7 @@ import { buildListParams, type FilterClause } from "./list-params.js";
 export const listRecurringBills: Tool = {
   name: "list_recurring_bills",
   description:
-    "List recurring bill templates with filtering, sorting, and pagination. Returns newest first by default.",
+    "List recurring bill templates with filtering, sorting, and pagination.",
   inputSchema: {
     type: "object",
     properties: {
@@ -30,7 +30,7 @@ export const listRecurringBills: Tool = {
       sort: {
         type: "string",
         description:
-          "Sort order in 'field:direction' format. Default: 'createdTime:desc'.",
+          "Sort order in 'field:direction' format. Only 'archived' is supported (e.g., 'archived:asc' or 'archived:desc'). Omit for default API ordering.",
       },
       vendorId: {
         type: "string",
