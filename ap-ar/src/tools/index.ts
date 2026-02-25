@@ -5,6 +5,7 @@
  */
 
 import { BillClient } from "../bill-client.js";
+import { getOrganizationInfo } from "./account.js";
 import {
   listVendors,
   getVendor,
@@ -260,4 +261,7 @@ export const tools: Tool[] = [
   createUser, // Full API Access
   updateUser, // Full API Access
   deleteUser, // Full API Access
+
+  // Organization
+  getOrganizationInfo,
 ];
