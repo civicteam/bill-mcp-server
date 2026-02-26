@@ -175,7 +175,7 @@ export const chargeCustomer: Tool = {
       const body: Record<string, unknown> = {
         customerId,
         fundingAccount: {
-          type: "CUSTOMER_BANK_ACCOUNT",
+          type: "BANK_ACCOUNT",
           id: customerBankAccountId,
         },
         invoicePayments: parsedInvoicePayments,

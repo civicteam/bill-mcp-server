@@ -429,7 +429,7 @@ export const createCustomerBankAccount: Tool = {
 export const deleteCustomerBankAccount: Tool = {
   name: "delete_customer_bank_account",
   description:
-    "Delete a customer's bank account. Requires full API access (not available with sync token).",
+    "Archive (delete) a customer's bank account. Requires full API access (not available with sync token).",
   inputSchema: {
     type: "object",
     properties: {
@@ -447,7 +447,8 @@ export const deleteCustomerBankAccount: Tool = {
   handler: async (args: any, client: BillClient) => {
     try {
       const { customerId, bankAccountId } = args;
-      const result = await client.delete(`/customers/${customerId}/bank-accounts/${bankAccountId}`);
+      // Bill.com v3 API uses POST to /archive endpoint instead of DELETE
+      const result = await client.post(`/customers/${customerId}/bank-accounts/${bankAccountId}/archive`);
       return {
         success: true,
         data: result,

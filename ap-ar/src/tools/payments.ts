@@ -273,18 +273,23 @@ export const voidPayment: Tool = {
         type: "string",
         description: "The payment ID to void (starts with 'stp')",
       },
+      type: {
+        type: "string",
+        description: "Void type: VOID_AND_CREDIT (void and return funds) or VOID_AND_REISSUE (void and send new payment with updated vendor details)",
+        enum: ["VOID_AND_CREDIT", "VOID_AND_REISSUE"],
+      },
       reason: {
         type: "string",
         description: "Reason for voiding the payment",
       },
     },
-    required: ["id", "reason"],
+    required: ["id", "type", "reason"],
   },
   handler: async (args: any, client: BillClient) => {
     try {
-      const { id, reason } = args;
+      const { id, type, reason } = args;
       const result = await client.post(`/payments/${id}/void`, {
-        type: "VOID",
+        type,
         reason,
       });
       return {
