@@ -95,6 +95,8 @@ BILL_PASSWORD=your_password_here
 # BILL_SESSION_TOKEN=your_pre_authenticated_session_token
 ```
 
+> **Note**: No auth type selector is needed in most integrations because both `sync_token` and `full_access` use the same credential structure (devKey, username, password, organizationId). The API accepts both credential types with the same request format. The difference is only in the session duration and available operations.
+
 ### Auth Type Comparison
 
 | Feature | Sync Token | Full Access | Session Token |
