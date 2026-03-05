@@ -113,6 +113,11 @@ export const createRecurringBill: Tool = {
       vendorId: {
         type: "string",
         description: "The vendor ID (starts with '009')",
+      chartOfAccountId: {
+        type: "string",
+        description:
+          "Chart of account ID for expense categorization (starts with '0ca'). Set at the bill level.",
+      },
       },
       schedulePeriod: {
         type: "string",
@@ -150,10 +155,6 @@ export const createRecurringBill: Tool = {
             amount: {
               type: "number",
               description: "Line item amount",
-            },
-            chartOfAccountId: {
-              type: "string",
-              description: "Chart of account ID for categorization",
             },
           },
           required: ["description", "amount"],
@@ -239,6 +240,11 @@ export const updateRecurringBill: Tool = {
         type: "string",
         description: "The recurring bill ID to update (starts with 'btp')",
       },
+      chartOfAccountId: {
+        type: "string",
+        description:
+          "Chart of account ID for expense categorization (starts with '0ca'). Set at the bill level.",
+      },
       schedulePeriod: {
         type: "string",
         description: "Schedule period: DAILY, WEEKLY, MONTHLY, or YEARLY",
@@ -273,10 +279,6 @@ export const updateRecurringBill: Tool = {
             amount: {
               type: "number",
               description: "Line item amount",
-            },
-            chartOfAccountId: {
-              type: "string",
-              description: "Chart of account ID for categorization",
             },
           },
           required: ["description", "amount"],

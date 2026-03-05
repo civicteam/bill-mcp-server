@@ -12,7 +12,7 @@ import { buildListParams, type FilterClause } from "./list-params.js";
 export const listInvoices: Tool = {
   name: "list_invoices",
   description:
-    "List invoices (accounts receivable) with filtering, sorting, and pagination. Returns newest first by default.",
+    "List invoices (accounts receivable) with filtering, sorting, and pagination. Returns newest first by default. Results contain customer IDs — use get_customer to resolve customer names.",
   inputSchema: {
     type: "object",
     properties: {
@@ -68,7 +68,7 @@ export const listInvoices: Tool = {
       if (createdBefore)
         filters.push({ field: "createdTime", op: "lte", value: createdBefore });
 
-      const params = buildListParams({ max: limit, page, sort, filters });
+      const params = buildListParams({ max: limit, page, sort: sort ?? "createdTime:desc", filters });
       const invoices = await client.get("/invoices", params);
 
       return {

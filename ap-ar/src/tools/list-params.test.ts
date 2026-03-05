@@ -61,7 +61,6 @@ describe("buildListParams", () => {
     const params = buildListParams({});
     expect(params).toEqual({
       max: 50,
-      sort: "createdTime:desc",
     });
   });
 
@@ -77,7 +76,6 @@ describe("buildListParams", () => {
     const params = buildListParams({ page: "cursor-token-123" });
     expect(params).toEqual({
       max: 50,
-      sort: "createdTime:desc",
       page: "cursor-token-123",
     });
   });
@@ -89,7 +87,6 @@ describe("buildListParams", () => {
     const params = buildListParams({ filters });
     expect(params).toEqual({
       max: 50,
-      sort: "createdTime:desc",
       filters: 'vendorId:eq:"v123"',
     });
   });

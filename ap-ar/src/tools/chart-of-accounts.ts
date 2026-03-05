@@ -37,11 +37,6 @@ export const listChartOfAccounts: Tool = {
         description:
           "Filter accounts whose name starts with this value (uses starts-with matching)",
       },
-      accountType: {
-        type: "number",
-        description:
-          "Filter by account type (numeric enum): 0=Unspecified, 1=Accounts Payable, 2=Accounts Receivable, 3=Bank, 4=Cost of Goods Sold, 5=Credit Card, 6=Equity, 7=Expense, 8=Fixed Asset, 9=Income, 10=Long Term Liability, 11=Other Asset",
-      },
       archived: {
         type: "boolean",
         description:
@@ -51,17 +46,15 @@ export const listChartOfAccounts: Tool = {
     required: [],
   },
   handler: async (args: any, client: BillClient) => {
-    const { limit, page, sort, name, accountType, archived } = args;
+    const { limit, page, sort, name, archived } = args;
 
     try {
       const filters: FilterClause[] = [];
       if (name) filters.push({ field: "name", op: "sw", value: name });
-      if (accountType)
-        filters.push({ field: "accountType", op: "eq", value: accountType });
       if (archived !== undefined)
         filters.push({ field: "archived", op: "eq", value: archived });
 
-      const params = buildListParams({ max: limit, page, sort, filters });
+      const params = buildListParams({ max: limit, page, sort: sort ?? "createdTime:desc", filters });
       const accounts = await client.get(
         "/classifications/chart-of-accounts",
         params

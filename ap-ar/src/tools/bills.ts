@@ -12,7 +12,7 @@ import { buildListParams, type FilterClause } from "./list-params.js";
 export const listBills: Tool = {
   name: "list_bills",
   description:
-    "List bills (accounts payable) with filtering, sorting, and pagination. Returns newest first by default.",
+    "List bills (accounts payable) with filtering, sorting, and pagination. Returns newest first by default. Results contain vendor IDs — use get_vendor to resolve vendor names.",
   inputSchema: {
     type: "object",
     properties: {
@@ -98,7 +98,7 @@ export const listBills: Tool = {
       if (dueDateBefore)
         filters.push({ field: "dueDate", op: "lte", value: dueDateBefore });
 
-      const params = buildListParams({ max: limit, page, sort, filters });
+      const params = buildListParams({ max: limit, page, sort: sort ?? "createdTime:desc", filters });
       const bills = await client.get("/bills", params);
 
       return {
@@ -171,6 +171,11 @@ export const createBill: Tool = {
         type: "string",
         description: "Payment due date (YYYY-MM-DD format)",
       },
+      chartOfAccountId: {
+        type: "string",
+        description:
+          "Chart of account ID for expense categorization (starts with '0ca'). Set at the bill level.",
+      },
       billLineItems: {
         type: "array",
         description: "Bill line items",
@@ -193,10 +198,6 @@ export const createBill: Tool = {
               type: "number",
               description:
                 "Line total amount. Can be set directly or calculated from quantity * price.",
-            },
-            chartOfAccountId: {
-              type: "string",
-              description: "Chart of account ID for categorization",
             },
           },
           required: ["description", "amount"],
@@ -268,6 +269,11 @@ export const updateBill: Tool = {
         type: "string",
         description: "Payment due date (YYYY-MM-DD format)",
       },
+      chartOfAccountId: {
+        type: "string",
+        description:
+          "Chart of account ID for expense categorization (starts with '0ca'). Set at the bill level.",
+      },
       billLineItems: {
         type: "array",
         description: "Bill line items",
@@ -290,10 +296,6 @@ export const updateBill: Tool = {
               type: "number",
               description:
                 "Line total amount. Can be set directly or calculated from quantity * price.",
-            },
-            chartOfAccountId: {
-              type: "string",
-              description: "Chart of account ID for categorization",
             },
           },
           required: ["description", "amount"],

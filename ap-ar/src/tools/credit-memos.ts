@@ -53,7 +53,7 @@ export const listCreditMemos: Tool = {
       if (archived !== undefined)
         filters.push({ field: "archived", op: "eq", value: archived });
 
-      const params = buildListParams({ max: limit, page, sort, filters });
+      const params = buildListParams({ max: limit, page, sort: sort ?? "createdTime:desc", filters });
       const creditMemos = await client.get("/credit-memos", params);
 
       return {

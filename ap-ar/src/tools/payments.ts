@@ -91,7 +91,7 @@ export const listPayments: Tool = {
       if (processDateBefore)
         filters.push({ field: "processDate", op: "lte", value: processDateBefore });
 
-      const params = buildListParams({ max: limit, page, sort, filters });
+      const params = buildListParams({ max: limit, page, sort: sort ?? "createdTime:desc", filters });
       const payments = await client.get("/payments", params);
 
       return {

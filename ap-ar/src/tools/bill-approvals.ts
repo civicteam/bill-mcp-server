@@ -270,7 +270,7 @@ export const deleteBillApprovalPolicy: Tool = {
 export const listPendingBillApprovals: Tool = {
   name: "list_pending_bill_approvals",
   description:
-    "List bills that are pending approval for the current user. Shows bills waiting for the authenticated user to approve. Requires Administrator, Accountant, or Approver role permissions.",
+    "List bills that are pending approval for the current user. Returns only bills currently awaiting the authenticated user's approval — an empty result is normal when no bills need approval. Requires Administrator, Accountant, or Approver role permissions.",
   inputSchema: {
     type: "object",
     properties: {

@@ -69,7 +69,7 @@ export const listVendorCredits: Tool = {
       if (createdBefore)
         filters.push({ field: "createdTime", op: "lte", value: createdBefore });
 
-      const params = buildListParams({ max: limit, page, sort, filters });
+      const params = buildListParams({ max: limit, page, sort: sort ?? "createdTime:desc", filters });
       const credits = await client.get("/vendor-credits", params);
 
       return {
@@ -140,6 +140,11 @@ export const createVendorCredit: Tool = {
         type: "string",
         description: "Vendor credit reference number",
       },
+      chartOfAccountId: {
+        type: "string",
+        description:
+          "Chart of account ID for expense categorization (starts with '0ca'). Set at the credit level.",
+      },
       vendorCreditLineItems: {
         type: "array",
         description: "Line items for the vendor credit",
@@ -153,11 +158,6 @@ export const createVendorCredit: Tool = {
             amount: {
               type: "number",
               description: "Credit amount for this line item",
-            },
-            chartOfAccountId: {
-              type: "string",
-              description:
-                "Chart of account ID for GL classification (starts with '0ca')",
             },
           },
           required: ["amount"],

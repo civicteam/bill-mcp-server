@@ -69,7 +69,7 @@ export const listVendors: Tool = {
       if (createdBefore)
         filters.push({ field: "createdTime", op: "lte", value: createdBefore });
 
-      const params = buildListParams({ max: limit, page, sort, filters });
+      const params = buildListParams({ max: limit, page, sort: sort ?? "createdTime:desc", filters });
       const vendors = await client.get("/vendors", params);
 
       return {
