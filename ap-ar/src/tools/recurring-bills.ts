@@ -113,11 +113,6 @@ export const createRecurringBill: Tool = {
       vendorId: {
         type: "string",
         description: "The vendor ID (starts with '009')",
-      chartOfAccountId: {
-        type: "string",
-        description:
-          "Chart of account ID for expense categorization (starts with '0ca'). Set at the bill level.",
-      },
       },
       schedulePeriod: {
         type: "string",
@@ -156,6 +151,11 @@ export const createRecurringBill: Tool = {
               type: "number",
               description: "Line item amount",
             },
+            chartOfAccountId: {
+              type: "string",
+              description:
+                "Chart of account ID for expense categorization (starts with '0ca'). Set per line item.",
+            },
           },
           required: ["description", "amount"],
         },
@@ -191,10 +191,18 @@ export const createRecurringBill: Tool = {
       } = args;
 
       // Parse line items if they arrive as a JSON string
-      const parsedLineItems =
+      const parsedLineItems: any[] =
         typeof recurringBillLineItems === "string"
           ? JSON.parse(recurringBillLineItems)
           : recurringBillLineItems;
+
+      // Wrap line-item chartOfAccountId into classifications object
+      const transformedLineItems = parsedLineItems.map(({ chartOfAccountId, ...lineRest }: any) => {
+        if (chartOfAccountId) {
+          return { ...lineRest, classifications: { chartOfAccountId } };
+        }
+        return lineRest;
+      });
 
       const body: Record<string, unknown> = {
         ...rest,
@@ -205,7 +213,7 @@ export const createRecurringBill: Tool = {
           ...(endDate && { endDate }),
           daysInAdvance: daysInAdvance || 0,
         },
-        recurringBillLineItems: parsedLineItems,
+        recurringBillLineItems: transformedLineItems,
       };
 
       if (autoPayment && bankAccountId) {
@@ -239,11 +247,6 @@ export const updateRecurringBill: Tool = {
       id: {
         type: "string",
         description: "The recurring bill ID to update (starts with 'btp')",
-      },
-      chartOfAccountId: {
-        type: "string",
-        description:
-          "Chart of account ID for expense categorization (starts with '0ca'). Set at the bill level.",
       },
       schedulePeriod: {
         type: "string",
@@ -279,6 +282,11 @@ export const updateRecurringBill: Tool = {
             amount: {
               type: "number",
               description: "Line item amount",
+            },
+            chartOfAccountId: {
+              type: "string",
+              description:
+                "Chart of account ID for expense categorization (starts with '0ca'). Set per line item.",
             },
           },
           required: ["description", "amount"],
@@ -318,10 +326,16 @@ export const updateRecurringBill: Tool = {
       }
 
       if (recurringBillLineItems) {
-        body.recurringBillLineItems =
+        const parsedLineItems: any[] =
           typeof recurringBillLineItems === "string"
             ? JSON.parse(recurringBillLineItems)
             : recurringBillLineItems;
+        body.recurringBillLineItems = parsedLineItems.map(({ chartOfAccountId, ...lineRest }: any) => {
+          if (chartOfAccountId) {
+            return { ...lineRest, classifications: { chartOfAccountId } };
+          }
+          return lineRest;
+        });
       }
 
       const recurringBill = await client.patch(`/recurringbills/${id}`, body);

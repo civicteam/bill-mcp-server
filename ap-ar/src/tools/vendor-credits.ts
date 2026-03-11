@@ -140,11 +140,6 @@ export const createVendorCredit: Tool = {
         type: "string",
         description: "Vendor credit reference number",
       },
-      chartOfAccountId: {
-        type: "string",
-        description:
-          "Chart of account ID for expense categorization (starts with '0ca'). Set at the credit level.",
-      },
       vendorCreditLineItems: {
         type: "array",
         description: "Line items for the vendor credit",
@@ -158,6 +153,11 @@ export const createVendorCredit: Tool = {
             amount: {
               type: "number",
               description: "Credit amount for this line item",
+            },
+            chartOfAccountId: {
+              type: "string",
+              description:
+                "Chart of account ID for expense categorization (starts with '0ca'). Set per line item.",
             },
           },
           required: ["amount"],
@@ -175,15 +175,22 @@ export const createVendorCredit: Tool = {
       const { vendorCreditLineItems, ...rest } = args;
 
       // Parse vendorCreditLineItems if it arrives as a JSON string
-      const parsedLineItems =
+      const parsedLineItems: any[] =
         typeof vendorCreditLineItems === "string"
           ? JSON.parse(vendorCreditLineItems)
           : vendorCreditLineItems;
 
-      // vendorId is passed directly at the top level, not nested
+      // Wrap line-item chartOfAccountId into classifications object
+      const transformedLineItems = parsedLineItems.map(({ chartOfAccountId, ...lineRest }: any) => {
+        if (chartOfAccountId) {
+          return { ...lineRest, classifications: { chartOfAccountId } };
+        }
+        return lineRest;
+      });
+
       const body: Record<string, unknown> = {
         ...rest,
-        vendorCreditLineItems: parsedLineItems,
+        vendorCreditLineItems: transformedLineItems,
       };
 
       const credit = await client.post("/vendor-credits", body);

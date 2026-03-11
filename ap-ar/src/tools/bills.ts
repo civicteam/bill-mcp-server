@@ -174,7 +174,7 @@ export const createBill: Tool = {
       chartOfAccountId: {
         type: "string",
         description:
-          "Chart of account ID for expense categorization (starts with '0ca'). Set at the bill level.",
+          "Chart of account ID for expense categorization (starts with '0ca'). Applied at the bill level via the classifications object.",
       },
       billLineItems: {
         type: "array",
@@ -199,6 +199,11 @@ export const createBill: Tool = {
               description:
                 "Line total amount. Can be set directly or calculated from quantity * price.",
             },
+            chartOfAccountId: {
+              type: "string",
+              description:
+                "Chart of account ID for this line item (starts with '0ca'). Overrides the bill-level chart of account for this line item.",
+            },
           },
           required: ["description", "amount"],
         },
@@ -212,22 +217,34 @@ export const createBill: Tool = {
   },
   handler: async (args: any, client: BillClient) => {
     try {
-      const { invoiceNumber, invoiceDate, billLineItems, ...rest } = args;
+      const { invoiceNumber, invoiceDate, chartOfAccountId, billLineItems, ...rest } = args;
 
       // Parse billLineItems if it arrives as a JSON string (MCP transport serialization)
-      const parsedLineItems =
+      const parsedLineItems: any[] =
         typeof billLineItems === "string" ? JSON.parse(billLineItems) : billLineItems;
 
-      // Nest invoice fields for the API
+      // Wrap line-item chartOfAccountId into classifications object
+      const transformedLineItems = parsedLineItems.map(({ chartOfAccountId: lineCoaId, ...lineRest }: any) => {
+        if (lineCoaId) {
+          return { ...lineRest, classifications: { chartOfAccountId: lineCoaId } };
+        }
+        return lineRest;
+      });
+
+      // Nest invoice fields and classifications for the API
       const body: Record<string, unknown> = {
         ...rest,
-        billLineItems: parsedLineItems,
+        billLineItems: transformedLineItems,
       };
       if (invoiceNumber || invoiceDate) {
         body.invoice = {
           ...(invoiceNumber && { invoiceNumber }),
           ...(invoiceDate && { invoiceDate }),
         };
+      }
+      // Wrap bill-level chartOfAccountId into classifications object
+      if (chartOfAccountId) {
+        body.classifications = { chartOfAccountId };
       }
 
       const bill = await client.post("/bills", body);
@@ -272,7 +289,7 @@ export const updateBill: Tool = {
       chartOfAccountId: {
         type: "string",
         description:
-          "Chart of account ID for expense categorization (starts with '0ca'). Set at the bill level.",
+          "Chart of account ID for expense categorization (starts with '0ca'). Applied at the bill level via the classifications object.",
       },
       billLineItems: {
         type: "array",
@@ -297,6 +314,11 @@ export const updateBill: Tool = {
               description:
                 "Line total amount. Can be set directly or calculated from quantity * price.",
             },
+            chartOfAccountId: {
+              type: "string",
+              description:
+                "Chart of account ID for this line item (starts with '0ca'). Overrides the bill-level chart of account for this line item.",
+            },
           },
           required: ["description", "amount"],
         },
@@ -310,18 +332,27 @@ export const updateBill: Tool = {
   },
   handler: async (args: any, client: BillClient) => {
     try {
-      const { id, invoiceNumber, invoiceDate, billLineItems, ...rest } = args;
+      const { id, invoiceNumber, invoiceDate, chartOfAccountId, billLineItems, ...rest } = args;
 
       const body: Record<string, unknown> = { ...rest };
       if (billLineItems) {
-        body.billLineItems =
+        const parsedLineItems: any[] =
           typeof billLineItems === "string" ? JSON.parse(billLineItems) : billLineItems;
+        body.billLineItems = parsedLineItems.map(({ chartOfAccountId: lineCoaId, ...lineRest }: any) => {
+          if (lineCoaId) {
+            return { ...lineRest, classifications: { chartOfAccountId: lineCoaId } };
+          }
+          return lineRest;
+        });
       }
       if (invoiceNumber || invoiceDate) {
         body.invoice = {
           ...(invoiceNumber && { invoiceNumber }),
           ...(invoiceDate && { invoiceDate }),
         };
+      }
+      if (chartOfAccountId) {
+        body.classifications = { chartOfAccountId };
       }
 
       const bill = await client.patch(`/bills/${id}`, body);
